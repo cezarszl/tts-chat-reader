@@ -1,4 +1,4 @@
-FROM node:23-alpine
+FROM node:23-slim
 
 WORKDIR /app
 
@@ -9,6 +9,7 @@ COPY . .
 
 RUN npm run build
 
-RUN npm run build
 EXPOSE 3000
-CMD ["node", "index.js"]
+
+CMD ["npm", "run", "start"]
+
