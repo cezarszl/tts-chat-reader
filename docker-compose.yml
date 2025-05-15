@@ -1,0 +1,22 @@
+version "3.9"configs:
+
+services:
+  backend:
+    build: ./backend
+    volumes: 
+      ./backend/messages.json:/app/messages.json
+      ./messages:/app/messages
+    ports:
+      "${BACKEND_PORT}:3000"
+  env_file:
+    .env
+
+  frontend:
+    build: ./frontend
+    volumes: 
+      ./frontend:/app/
+    ports: 
+      "${FRONTEND_PORT}:5137"
+    depends_on:
+      - backend
+    command: npm run dev -- --host
