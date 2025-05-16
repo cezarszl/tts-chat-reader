@@ -6,6 +6,7 @@ services:
     volumes: 
       - ./backend/messages.json:/app/messages.json
       - ./messages:/app/messages
+       ./whatsapp-session:/home/node/.wwebjs_auth
     ports:
      - "${BACKEND_PORT}:3000"
     env_file: .env
