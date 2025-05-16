@@ -1,6 +1,8 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 
+export let qrCodeBase64 = '';
+
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -8,8 +10,6 @@ const client = new Client({
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     },
 });
-
-export let qrCodeBase64 = '';
 
 client.on('qr', async (qr) => {
     qrCodeBase64 = await qrcode.toDataURL(qr);
@@ -21,3 +21,5 @@ client.on('ready', () => {
 });
 
 client.initialize();
+
+export default client;
