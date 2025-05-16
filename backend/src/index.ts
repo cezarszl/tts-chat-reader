@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { qrCodeBase64 } from './whatsapp.js';
+import { qrCodeBase64 } from './whatsapp';
 
 const app = express();
 const port = process.env.BACKEND_PORT || 3000;
