@@ -2,7 +2,7 @@
     "name": "tts-chat-reader-backend",
     "version": "1.0.0",
     "private": true,
-    "type": "module",
+    "type": "commonjs",
     "main": "dist/index.js",
     "scripts": {
         "dev": "ts-node-dev --respawn src/index.ts",
@@ -13,6 +13,7 @@
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "express": "^4.18.2",
+        "puppeteer": "^24.8.2",
         "qrcode": "^1.5.4",
         "whatsapp-web.js": "^1.28.0"
     },
