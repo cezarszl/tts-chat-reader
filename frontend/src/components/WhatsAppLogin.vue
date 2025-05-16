@@ -16,7 +16,7 @@ const qr = ref<string| null>(null);
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:3000/auth/qr');
+    const res = await fetch('http://localhost:3000/api/whatsapp/auth/qr');
     const data = await res.json();
     console.log('QR:', data);
     qr.value = data.qr;
