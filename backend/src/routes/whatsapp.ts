@@ -27,10 +27,12 @@ router.get('/contacts', async (req, res) => {
 
     for (const contactId of Object.keys(sessionMessages)) {
         const contact = await whatsappClient.getContactById(contactId);
-
+        const messages = sessionMessages[contactId];
+        const lastMessage = messages[messages.length - 1];
         result.push({
             id: contactId,
             name: contact.pushname || contact.name || contact.number || contactId,
+            lastTimestamp: lastMessage?.timestamp ?? null,
         });
     }
 
