@@ -2,6 +2,7 @@ import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 
 export let qrCodeBase64 = '';
+export let isAuthenticated = false;
 
 export const whatsappClient = new Client({
     authStrategy: new LocalAuth({
@@ -16,11 +17,13 @@ export const whatsappClient = new Client({
 
 whatsappClient.on('qr', async qr => {
     console.log('🔐 QR code received (new)');
+    isAuthenticated = false;
     qrCodeBase64 = await qrcode.toDataURL(qr);
 });
 
 whatsappClient.on('authenticated', () => {
     console.log('✅ Authenticated with WhatsApp.');
+    isAuthenticated = true;
 });
 
 whatsappClient.on('auth_failure', msg => {
