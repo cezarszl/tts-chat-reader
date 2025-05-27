@@ -22,4 +22,30 @@ router.get('/messages', (req, res) => {
     res.json(sessionMessages);
 });
 
+router.get('/contacts', (req, res) => {
+    res.json(Object.keys(sessionMessages));
+});
+
+router.get('/messages/:contactId', (req, res) => {
+    const contact = req.params.contactId;
+    res.json(sessionMessages[contact] || []);
+});
+
+router.post('/send', async (req, res) => {
+    const { to, message } = req.body;
+
+    if (!to || !message) {
+        return res.status(400).json({ error: 'Missing "to" or "message"' });
+    }
+
+    try {
+        await whatsappClient.sendMessage(to, message);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Error sending message:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+
 export default router;
