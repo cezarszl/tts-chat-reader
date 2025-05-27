@@ -36,20 +36,26 @@ const saveMessages = () => {
 
 whatsappClient.on('message', async (message) => {
     if (!message.fromMe) {
+        const contact = await whatsappClient.getContactById(message.from);
+
         const msg = {
-            from: message.from,
+            from: contact.pushname || contact.name || contact.number || message.from,
+            rawFrom: message.from,
             body: message.body,
             timestamp: Date.now(),
         };
+
         if (!sessionMessages[message.from]) {
             sessionMessages[message.from] = [];
         }
+
         sessionMessages[message.from].push(msg);
         saveMessages();
 
-        broadcastMessage({ contact: message.from, ...msg });
+        broadcastMessage({ contactId: message.from, ...msg });
     }
 });
+
 
 
 whatsappClient.on('qr', async qr => {

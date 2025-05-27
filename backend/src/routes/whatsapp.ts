@@ -22,9 +22,21 @@ router.get('/messages', (req, res) => {
     res.json(sessionMessages);
 });
 
-router.get('/contacts', (req, res) => {
-    res.json(Object.keys(sessionMessages));
+router.get('/contacts', async (req, res) => {
+    const result = [];
+
+    for (const contactId of Object.keys(sessionMessages)) {
+        const contact = await whatsappClient.getContactById(contactId);
+
+        result.push({
+            id: contactId,
+            name: contact.pushname || contact.name || contact.number || contactId,
+        });
+    }
+
+    res.json(result);
 });
+
 
 router.get('/messages/:contactId', (req, res) => {
     const contact = req.params.contactId;
