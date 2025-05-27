@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import WhatsAppLogin from './components/WhatsAppLogin.vue';
+import WhatsAppPage from './components/WhatsAppPage.vue';
 
 const routes = [
     {
         path: '/whatsapp',
-        component: WhatsAppLogin,
+        component: WhatsAppPage,
     },
 ];
 
