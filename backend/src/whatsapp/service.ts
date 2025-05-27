@@ -35,26 +35,53 @@ const saveMessages = () => {
 };
 
 whatsappClient.on('message', async (message) => {
-    if (!message.fromMe) {
-        const contact = await whatsappClient.getContactById(message.from);
 
-        const msg = {
-            from: contact.pushname || contact.name || contact.number || message.from,
-            rawFrom: message.from,
-            body: message.body,
-            timestamp: Date.now(),
-        };
-
-        if (!sessionMessages[message.from]) {
-            sessionMessages[message.from] = [];
-        }
-
-        sessionMessages[message.from].push(msg);
-        saveMessages();
-
-        broadcastMessage({ contactId: message.from, ...msg });
+    if (message.from === 'status@broadcast') {
+        return;
     }
+    const contactId = message.fromMe ? message.to : message.from;
+
+    const contact = await whatsappClient.getContactById(contactId);
+
+    const msg = {
+        from: message.fromMe ? 'me' : (contact.pushname || contact.name || contact.number || contactId),
+        rawFrom: contactId,
+        body: message.body,
+        timestamp: Date.now(),
+    };
+
+    if (!sessionMessages[contactId]) {
+        sessionMessages[contactId] = [];
+    }
+
+    sessionMessages[contactId].push(msg);
+    saveMessages();
+
+    broadcastMessage({ contactId, ...msg });
 });
+
+
+whatsappClient.on('message_create', async (msg) => {
+    if (!msg.fromMe) return;
+
+    const contactId = msg.to;
+
+    const outgoing = {
+        from: 'me',
+        body: msg.body,
+        timestamp: Date.now(),
+    };
+
+    if (!sessionMessages[contactId]) {
+        sessionMessages[contactId] = [];
+    }
+
+    sessionMessages[contactId].push(outgoing);
+    saveMessages();
+
+    broadcastMessage({ contactId, ...outgoing });
+});
+
 
 
 
