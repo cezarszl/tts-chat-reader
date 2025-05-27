@@ -10,6 +10,7 @@ import { ref, onMounted } from 'vue'
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
 const qr = ref<string | boolean | null>(null)
+const emit = defineEmits(['authenticated'])
 
 onMounted(async () => {
   try {
@@ -19,10 +20,12 @@ onMounted(async () => {
       qr.value = data.qr
     } else {
       qr.value = false
+      emit('authenticated')
     }
   } catch (e) {
     console.error('❌ Fetch QR failed', e)
     qr.value = false
+    emit('authenticated')
   }
 })
 </script>

@@ -262,7 +262,6 @@ const selectContact = async (contactId: string) => {
 
   const res = await fetch(`${baseUrl}/api/whatsapp/messages/${contactId}`)
   messages.value = await res.json()
-  scrollToBottom()
 
   unreadMap.value[contactId] = 0
 }
@@ -298,7 +297,6 @@ onMounted(() => {
         body: data.body,
         timestamp: data.timestamp,
       })
-      scrollToBottom()
     }
 
     if (data.contactId !== selectedContact.value) {

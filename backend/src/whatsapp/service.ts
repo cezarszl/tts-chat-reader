@@ -98,12 +98,12 @@ whatsappClient.on('authenticated', () => {
 
 whatsappClient.on('auth_failure', msg => {
     console.log('❌ Auth failed:', msg);
+    isAuthenticated = false;
 });
 
 whatsappClient.on('ready', async () => {
 
     console.log('✅ WhatsApp client is ready!');
-    const contacts = await whatsappClient.getContacts();
 
 });
 
