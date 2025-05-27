@@ -14,6 +14,20 @@ export const whatsappClient = new Client({
     },
 });
 
+export const sessionMessages: { from: string; body: string; timestamp: number }[] = [];
+
+whatsappClient.on('message', async (message) => {
+    if (!message.fromMe) {
+        const msg = {
+            from: message.from,
+            body: message.body,
+            timestamp: Date.now(),
+        };
+        sessionMessages.push(msg);
+        console.log('📩 New message:', msg);
+    }
+});
+
 
 whatsappClient.on('qr', async qr => {
     console.log('🔐 QR code received (new)');

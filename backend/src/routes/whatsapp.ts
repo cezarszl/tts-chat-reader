@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { whatsappClient, qrCodeBase64, isAuthenticated } from '../whatsapp';
+import { whatsappClient, qrCodeBase64, isAuthenticated, sessionMessages } from '../whatsapp';
 
 
 
@@ -15,6 +15,11 @@ router.get('/auth/qr', (req, res) => {
     }
 
     return res.status(404).json({ error: 'QR code not ready' });
+});
+
+
+router.get('/messages', (req, res) => {
+    res.json(sessionMessages);
 });
 
 export default router;

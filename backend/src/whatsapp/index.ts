@@ -1,1 +1,1 @@
-export { whatsappClient, qrCodeBase64, isAuthenticated } from './service';
+export { whatsappClient, qrCodeBase64, isAuthenticated, sessionMessages } from './service';
