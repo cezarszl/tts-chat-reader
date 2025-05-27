@@ -35,7 +35,7 @@
                 <p class="text-sm font-semibold text-gray-900 truncate">
                   {{ contact.name }}
                 </p>
-                <p class="text-xs text-gray-500 truncate">Ostatnia wiadomość...</p>
+                <p class="text-xs text-gray-500 truncate">{{ contact.lastMessage }}</p>
               </div>
 
               <!-- Unread badge -->
@@ -232,7 +232,9 @@ import { ref, onMounted } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
-const contacts = ref<{ id: string; name: string; lastTimestamp: number | null }[]>([])
+const contacts = ref<
+  { id: string; name: string; lastTimestamp: number | null; lastMessage: string | null }[]
+>([])
 const selectedContact = ref<string | null>(null)
 const selectedContactName = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
