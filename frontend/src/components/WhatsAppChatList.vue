@@ -6,14 +6,14 @@
         <ul class="space-y-2">
           <li
             v-for="contact in contacts"
-            :key="contact"
-            @click="selectContact(contact)"
+            :key="contact.id"
+            @click="selectContact(contact.id)"
             :class="[
               'cursor-pointer p-2 rounded hover:bg-gray-200',
-              contact === selectedContact ? 'bg-gray-300 font-bold' : ''
+              contact.id === selectedContact ? 'bg-gray-300 font-bold' : ''
             ]"
           >
-            {{ contact }}
+            {{ contact.name }}
           </li>
         </ul>
       </aside>
@@ -66,7 +66,7 @@
   
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   
-  const contacts = ref<string[]>([]);
+  const contacts = ref<{ id: string; name: string }[]>([]);
   const selectedContact = ref<string | null>(null);
   const messages = ref<{ from: string; body: string; timestamp: number }[]>([]);
   const newMessage = ref('');
