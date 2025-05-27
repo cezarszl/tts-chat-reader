@@ -60,8 +60,8 @@
     </aside>
 
     <!-- Main chat area -->
-    <main class="flex-1 flex flex-col bg-gradient-to-b from-green-50 to-white overflow-hidden">
-      <div v-if="selectedContact" class="flex-1 flex flex-col">
+    <main class="flex-1 bg-gradient-to-b from-green-50 to-white overflow-hidden">
+      <div v-if="selectedContact" class="h-full grid grid-rows-[auto_1fr_auto]">
         <!-- Chat header -->
         <header class="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
           <div class="flex items-center gap-4">
@@ -72,11 +72,11 @@
             </div>
             <div>
               <h2 class="text-lg font-semibold text-gray-900">{{ selectedContactName }}</h2>
-              <p class="text-sm text-green-600">Online</p>
+              <!-- <p class="text-sm text-green-600">Online</p> -->
             </div>
 
             <!-- Action buttons -->
-            <div class="ml-auto flex items-center gap-2">
+            <!-- <div class="ml-auto flex items-center gap-2">
               <button
                 class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
               >
@@ -101,12 +101,12 @@
                   ></path>
                 </svg>
               </button>
-            </div>
+            </div> -->
           </div>
         </header>
 
         <!-- Messages area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        <div class="overflow-y-auto p-6 space-y-4">
           <div
             v-for="(msg, index) in messages"
             :key="msg.timestamp"
@@ -262,6 +262,7 @@ const selectContact = async (contactId: string) => {
 
   const res = await fetch(`${baseUrl}/api/whatsapp/messages/${contactId}`)
   messages.value = await res.json()
+  scrollToBottom()
 
   unreadMap.value[contactId] = 0
 }
@@ -291,13 +292,13 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    console.log(data)
     if (data.contactId === selectedContact.value) {
       messages.value.push({
         from: data.from,
         body: data.body,
         timestamp: data.timestamp,
       })
+      scrollToBottom()
     }
 
     if (data.contactId !== selectedContact.value) {
