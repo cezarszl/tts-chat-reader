@@ -1,5 +1,9 @@
 import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
+
+const historyPath = path.resolve(__dirname, '../../chat-history.json');
 
 export let qrCodeBase64 = '';
 export let isAuthenticated = false;
@@ -14,7 +18,20 @@ export const whatsappClient = new Client({
     },
 });
 
-export const sessionMessages: { from: string; body: string; timestamp: number }[] = [];
+export const sessionMessages: Record<string, { from: string, body: string, timestamp: number }[]> = {};
+
+if (fs.existsSync(historyPath)) {
+    const file = fs.readFileSync(historyPath, 'utf-8');
+    const loaded = JSON.parse(file);
+
+    for (const contact in loaded) {
+        sessionMessages[contact] = loaded[contact];
+    }
+}
+
+const saveMessages = () => {
+    fs.writeFileSync(historyPath, JSON.stringify(sessionMessages, null, 2));
+};
 
 whatsappClient.on('message', async (message) => {
     if (!message.fromMe) {
@@ -23,8 +40,11 @@ whatsappClient.on('message', async (message) => {
             body: message.body,
             timestamp: Date.now(),
         };
-        sessionMessages.push(msg);
-        console.log('📩 New message:', msg);
+        if (!sessionMessages[message.from]) {
+            sessionMessages[message.from] = [];
+        }
+        sessionMessages[message.from].push(msg);
+        saveMessages();
     }
 });
 
