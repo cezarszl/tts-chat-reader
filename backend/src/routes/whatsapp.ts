@@ -46,6 +46,10 @@ router.get('/messages/:contactId', (req, res) => {
     res.json(sessionMessages[contact] || []);
 });
 
+router.get('/session', (req, res) => {
+    res.json({ authenticated: isAuthenticated });
+});
+
 router.post('/send', async (req, res) => {
     const { to, message } = req.body;
 
