@@ -33,6 +33,7 @@ router.get('/contacts', async (req, res) => {
             id: contactId,
             name: contact.pushname || contact.name || contact.number || contactId,
             lastTimestamp: lastMessage?.timestamp ?? null,
+            lastMessage: lastMessage?.body ?? null,
         });
     }
 
