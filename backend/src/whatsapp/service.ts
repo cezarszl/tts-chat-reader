@@ -13,9 +13,6 @@ export const whatsappClient = new Client({
     },
 });
 
-const messages: { from: string; body: string; timestamp: number }[] = [];
-
-export const getReceivedMessages = () => messages;
 
 whatsappClient.on('qr', async qr => {
     console.log('🔐 QR code received (new)');
@@ -30,19 +27,12 @@ whatsappClient.on('auth_failure', msg => {
     console.log('❌ Auth failed:', msg);
 });
 
-whatsappClient.on('ready', () => {
+whatsappClient.on('ready', async () => {
+
     console.log('✅ WhatsApp client is ready!');
+    const contacts = await whatsappClient.getContacts();
+
 });
 
-whatsappClient.on('message', (msg: Message) => {
-    if (!msg.fromMe) {
-        messages.push({
-            from: msg.from,
-            body: msg.body,
-            timestamp: msg.timestamp,
-        });
-        console.log(`[📩 WhatsApp] ${msg.from}: ${msg.body}`);
-    }
-});
 
 whatsappClient.initialize();

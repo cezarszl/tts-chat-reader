@@ -1,1 +1,1 @@
-export { whatsappClient, qrCodeBase64, getReceivedMessages } from './service';
+export { whatsappClient, qrCodeBase64 } from './service';
