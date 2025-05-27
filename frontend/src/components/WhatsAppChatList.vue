@@ -100,6 +100,22 @@
     newMessage.value = '';
   };
   
-  onMounted(fetchContacts);
+  onMounted(() => {
+  fetchContacts();
+
+  const ws = new WebSocket(baseUrl.replace(/^http/, 'ws')); // ws://localhost:3000
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.contact === selectedContact.value) {
+      messages.value.push({
+        from: data.from,
+        body: data.body,
+        timestamp: data.timestamp,
+      });
+    }
+  };
+});
   </script>
   
