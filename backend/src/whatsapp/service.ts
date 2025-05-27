@@ -2,6 +2,7 @@ import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
+import { broadcastMessage } from '../ws';
 
 const historyPath = path.resolve(__dirname, '../../chat-history.json');
 
@@ -45,6 +46,8 @@ whatsappClient.on('message', async (message) => {
         }
         sessionMessages[message.from].push(msg);
         saveMessages();
+
+        broadcastMessage({ contact: message.from, ...msg });
     }
 });
 
