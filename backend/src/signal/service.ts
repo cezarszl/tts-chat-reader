@@ -9,7 +9,6 @@ const historyPath = path.resolve(__dirname, '../../signal-history.json');
 
 export const sessionMessages: Record<string, { from: string; body: string; timestamp: number }[]> = {};
 
-// Wczytaj wiadomości z pliku
 if (fs.existsSync(historyPath)) {
     const file = fs.readFileSync(historyPath, 'utf-8');
     const loaded = JSON.parse(file);
@@ -63,7 +62,6 @@ export const signalReceive = (from: string): Promise<string> => {
     });
 };
 
-// Parsowanie otrzymanych wiadomości i aktualizacja sessionMessages
 export const receiveMessages = async (from: string) => {
     console.log('📥 signalReceive for:', from);
     const output = await signalReceive(from);
@@ -73,17 +71,24 @@ export const receiveMessages = async (from: string) => {
     const blocks = output.trim().split('\n\n');
 
     for (const block of blocks) {
-        const fromMatch = block.match(/Envelope from:.*\+(\d{11,})/);
-        const bodyMatch = block.match(/Message:\s+([\s\S]*)/);
+        // ❌ Pomijamy wiadomości synchronizacyjne (Twoje własne)
+        if (block.includes('Received sync sent message')) {
+            console.warn('🔁 Skipped sync sent message block');
+            continue;
+        }
+
+        const fromMatch = block.match(/Envelope from: [“"]?.*?([+]\d+)\b/);
+        const bodyMatch = block.match(/Body:\s+([\s\S]*)/);
         const timestampMatch = block.match(/Timestamp:\s+(\d+)/);
 
         if (fromMatch && bodyMatch) {
             const msg = {
-                from: `+${fromMatch[1]}`,
+                from: fromMatch[1],
                 body: bodyMatch[1].trim(),
                 timestamp: timestampMatch ? Number(timestampMatch[1]) : Date.now(),
             };
             console.log('✅ Parsed message:', msg);
+
             if (!sessionMessages[msg.from]) {
                 sessionMessages[msg.from] = [];
             }
@@ -100,3 +105,4 @@ export const receiveMessages = async (from: string) => {
     saveMessages();
     return messages;
 };
+
