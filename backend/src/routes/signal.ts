@@ -21,13 +21,20 @@ router.get('/messages', async (req, res) => {
     }
 
     try {
-        await receiveMessages(from);
-        console.log('📨 From:', from);
-        console.log('📨 Messages:', sessionMessages[from]);
+        await receiveMessages(from)
         res.json(sessionMessages[from] || []);
     } catch (err) {
         res.status(500).json({ success: false, error: err });
     }
+});
+
+router.get('/contacts', (req, res) => {
+    const contacts = Object.keys(sessionMessages).map((number) => ({
+        id: number,
+        name: number,
+    }));
+
+    res.json(contacts);
 });
 
 export default router;
