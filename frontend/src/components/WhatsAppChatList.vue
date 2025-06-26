@@ -165,19 +165,19 @@
                 class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
                 rows="1"
               />
+              <!-- Emoji toggle button -->
               <button
                 type="button"
-                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                @click="showEmojiPicker = !showEmojiPicker"
+                class="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
+                😀
               </button>
+
+              <!-- Emoji picker -->
+              <div v-if="showEmojiPicker" class="absolute bottom-16 right-6 z-50">
+                <Picker :data="emojiIndex" set="apple" @select="addEmoji" />
+              </div>
             </div>
             <button
               type="submit"
@@ -229,6 +229,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
+import emojiData from 'emoji-mart-vue-fast/data/all.json'
+import 'emoji-mart-vue-fast/css/emoji-mart.css'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -246,6 +249,12 @@ const selectedContactName = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const unreadMap = ref<Record<string, number>>({})
+const showEmojiPicker = ref(false)
+const emojiIndex = new EmojiIndex(emojiData)
+
+const addEmoji = (emoji: any) => {
+  newMessage.value += emoji.native
+}
 
 const formatTime = (timestamp: number | null) => {
   if (!timestamp) return ''
