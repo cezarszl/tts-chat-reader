@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.7",
+    "emoji-mart-vue-fast": "^15.0.4",
     "tailwindcss": "^4.1.7",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1"

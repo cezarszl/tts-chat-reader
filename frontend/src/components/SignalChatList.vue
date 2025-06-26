@@ -33,7 +33,7 @@
               <!-- Contact info -->
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-gray-900 truncate">
-                  {{ contact.id }}
+                  {{ contact.name }}
                 </p>
                 <p class="text-xs text-gray-500 truncate">Bezpieczna wiadomość...</p>
               </div>
@@ -269,7 +269,7 @@
 import { ref, onMounted } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
-const contactList = ref<{ id: string }[]>([])
+const contactList = ref<{ id: string; name: string }[]>([])
 const selectedContact = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
@@ -282,46 +282,31 @@ const formatTime = (timestamp: number) => {
   })
 }
 
-// 1. Pobierz wiadomości z backendu i zbuduj listę kontaktów
 const fetchMessages = async () => {
   try {
-    // const res = await fetch(`${baseUrl}/api/signal/messages`)
-    const res = await fetch(`${baseUrl}/api/signal/messages?from=${myNumber.value}`)
-
-    if (!res.ok) {
-      throw new Error('Błąd pobierania wiadomości')
-    }
+    const res = await fetch(`${baseUrl}/api/signal/contacts`)
+    if (!res.ok) throw new Error('Błąd pobierania kontaktów')
 
     const data = await res.json()
+    contactList.value = data
 
-    const ids = Object.keys(data)
-    contactList.value = ids.map((id) => ({ id }))
-
-    // jeśli jakiś kontakt już wybrany – aktualizuj jego wiadomości
-    if (selectedContact.value && data[selectedContact.value]) {
-      messages.value = data[selectedContact.value]
+    if (selectedContact.value) {
+      const messagesRes = await fetch(`${baseUrl}/api/signal/messages?from=${myNumber.value}`)
+      const messagesData = await messagesRes.json()
+      messages.value = messagesData[selectedContact.value] || []
     }
   } catch (error) {
-    console.error('Błąd podczas pobierania wiadomości:', error)
-    // Dodaj przykładowe dane dla demonstracji
-    contactList.value = [
-      { id: '+49176123456789' },
-      { id: '+49176987654321' },
-      { id: '+49176555666777' },
-      { id: 'Anna Kowalska' },
-      { id: 'Jan Nowak' },
-    ]
+    console.error('Błąd:', error)
   }
 }
 
-// 2. Wybór kontaktu
+console.log(contactList)
 const selectContact = async (contactId: string) => {
   selectedContact.value = contactId
 
   try {
     await fetchMessages()
   } catch (error) {
-    // Przykładowe wiadomości dla demonstracji
     messages.value = [
       {
         from: contactId,
@@ -352,7 +337,6 @@ const selectContact = async (contactId: string) => {
   }
 }
 
-// 3. Wysyłanie wiadomości
 const sendMessage = async () => {
   if (!selectedContact.value || !newMessage.value.trim()) return
 
