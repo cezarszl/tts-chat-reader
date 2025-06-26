@@ -6,7 +6,7 @@
       <div class="p-6 border-b border-gray-100">
         <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
           <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-          Kontakty
+          Contacts
         </h2>
       </div>
 
@@ -161,7 +161,7 @@
             <div class="flex-1 relative">
               <input
                 v-model="newMessage"
-                placeholder="Napisz wiadomość..."
+                placeholder="Type a message..."
                 class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
                 rows="1"
               />
@@ -217,9 +217,9 @@
               ></path>
             </svg>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Witaj w WhatsApp Web</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Welcome to WhatsApp Web</h3>
           <p class="text-gray-500 max-w-sm">
-            Wybierz kontakt z listy po lewej stronie, aby rozpocząć konwersację
+            Select a contact from the list on the left to start a conversation
           </p>
         </div>
       </div>
@@ -249,7 +249,7 @@ const unreadMap = ref<Record<string, number>>({})
 
 const formatTime = (timestamp: number | null) => {
   if (!timestamp) return ''
-  return new Date(timestamp).toLocaleTimeString('pl-PL', {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
   })
