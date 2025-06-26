@@ -232,9 +232,15 @@ import { ref, onMounted } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
-const contacts = ref<
-  { id: string; name: string; lastTimestamp: number | null; lastMessage: string | null }[]
->([])
+type Contact = {
+  id: string
+  name: string
+  lastTimestamp: number | null
+  lastMessage: string | null
+}
+
+const contacts = ref<Contact[]>([])
+
 const selectedContact = ref<string | null>(null)
 const selectedContactName = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
@@ -251,7 +257,8 @@ const formatTime = (timestamp: number | null) => {
 
 const fetchContacts = async () => {
   const res = await fetch(`${baseUrl}/api/whatsapp/contacts`)
-  contacts.value = await res.json()
+  const data = (await res.json()) as Contact[]
+  contacts.value = data.sort((a, b) => (b.lastTimestamp ?? 0) - (a.lastTimestamp ?? 0))
 }
 
 const selectContact = async (contactId: string) => {
@@ -261,6 +268,7 @@ const selectContact = async (contactId: string) => {
   selectedContactName.value = contact?.name ?? contactId
 
   const res = await fetch(`${baseUrl}/api/whatsapp/messages/${contactId}`)
+
   messages.value = await res.json()
 
   unreadMap.value[contactId] = 0
@@ -291,6 +299,7 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
+
     if (data.contactId === selectedContact.value) {
       messages.value.push({
         from: data.from,
