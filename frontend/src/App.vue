@@ -1,15 +1,13 @@
 <template>
-  <div class="app">    
+  <div class="app">
     <router-view />
   </div>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
 
 <style scoped>
 .app {
   font-family: sans-serif;
-  padding: 2rem;
 }
 </style>
