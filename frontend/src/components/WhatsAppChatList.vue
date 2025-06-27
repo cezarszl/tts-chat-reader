@@ -128,7 +128,7 @@
               <button
                 type="button"
                 @click.stop="toggleEmojiPicker"
-                class="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
                 😀
               </button>
