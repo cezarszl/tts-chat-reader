@@ -57,7 +57,7 @@ whatsappClient.on('message', async (message) => {
     sessionMessages[contactId].push(msg);
     saveMessages();
 
-    broadcastMessage({ contactId, ...msg });
+    broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
 });
 
 
@@ -81,7 +81,7 @@ whatsappClient.on('message_create', async (msg) => {
     sessionMessages[contactId].push(outgoing);
     saveMessages();
 
-    broadcastMessage({ contactId, ...outgoing });
+    broadcastMessage({ contactId, ...outgoing, source: 'whatsapp' });
 });
 
 
