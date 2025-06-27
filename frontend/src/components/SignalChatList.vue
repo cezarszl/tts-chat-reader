@@ -71,7 +71,7 @@
         </header>
 
         <!-- Messages area -->
-        <div class="overflow-y-auto p-6 space-y-4">
+        <div ref="messageContainer" class="overflow-y-auto p-6 space-y-4">
           <div
             v-for="(msg, index) in messages"
             :key="msg.timestamp"
@@ -187,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -201,9 +201,22 @@ type Contact = {
 const contacts = ref<Contact[]>([])
 const selectedContact = ref<string | null>(null)
 const selectedContactName = ref<string | null>(null)
-const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const myNumber = ref(import.meta.env.VITE_MY_PHONE_NUMBER)
+
+const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
+const messageContainer = ref<HTMLElement | null>(null)
+
+watch(
+  messages,
+  async () => {
+    await nextTick()
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  },
+  { deep: true, flush: 'post' },
+)
 
 const formatTime = (timestamp: number | null) => {
   if (!timestamp) return ''
