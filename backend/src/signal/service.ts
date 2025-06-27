@@ -5,9 +5,16 @@ import { broadcastMessage } from '../ws';
 
 const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/signal-cli';
 const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
-const historyPath = path.resolve(__dirname, '../../signal-history.json');
+const historyPath = path.resolve(__dirname, 'signal-history.json');
+const namesPath = path.resolve(__dirname, 'signal-names.json');
+
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+export const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 
 export const sessionMessages: Record<string, { from: string; body: string; timestamp: number }[]> = {};
+export let knownNames: Record<string, string> = {}
 
 if (fs.existsSync(historyPath)) {
     const file = fs.readFileSync(historyPath, 'utf-8');
@@ -18,8 +25,16 @@ if (fs.existsSync(historyPath)) {
     }
 }
 
+if (fs.existsSync(namesPath)) {
+    Object.assign(knownNames, JSON.parse(fs.readFileSync(namesPath, 'utf-8')));
+}
+
 const saveMessages = () => {
     fs.writeFileSync(historyPath, JSON.stringify(sessionMessages, null, 2));
+};
+
+export const saveNames = () => {
+    fs.writeFileSync(namesPath, JSON.stringify(knownNames, null, 2));
 };
 
 export const signalSend = (from: string, to: string, message: string): Promise<string> => {
@@ -65,44 +80,73 @@ export const signalReceive = (from: string): Promise<string> => {
 export const receiveMessages = async (from: string) => {
     console.log('📥 signalReceive for:', from);
     const output = await signalReceive(from);
-    console.log('📤 Raw output:', output);
-    const messages: { from: string; body: string; timestamp: number }[] = [];
 
     const blocks = output.trim().split('\n\n');
 
     for (const block of blocks) {
-        // ❌ Pomijamy wiadomości synchronizacyjne (Twoje własne)
-        if (block.includes('Received sync sent message')) {
-            console.warn('🔁 Skipped sync sent message block');
+        const parsed = parseBlock(block);
+        if (!parsed) {
+            console.warn('⛔ Skipped block:\n', block);
             continue;
         }
 
-        const fromMatch = block.match(/Envelope from: [“"]?.*?([+]\d+)\b/);
-        const bodyMatch = block.match(/Body:\s+([\s\S]*)/);
-        const timestampMatch = block.match(/Timestamp:\s+(\d+)/);
+        const { contactId, displayName, message } = parsed;
 
-        if (fromMatch && bodyMatch) {
-            const msg = {
-                from: fromMatch[1],
-                body: bodyMatch[1].trim(),
-                timestamp: timestampMatch ? Number(timestampMatch[1]) : Date.now(),
-            };
-            console.log('✅ Parsed message:', msg);
+        if (!knownNames[contactId]) {
+            knownNames[contactId] = displayName!;
+            saveNames();
+            console.log(`💾 Saved contact name: ${contactId} = "${displayName}"`);
+        }
 
-            if (!sessionMessages[msg.from]) {
-                sessionMessages[msg.from] = [];
-            }
+        if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
+        sessionMessages[contactId].push(message);
 
-            sessionMessages[msg.from].push(msg);
-            messages.push(msg);
+        broadcastMessage({ contactId, ...message });
+    }
+    saveMessages();
+};
 
-            broadcastMessage({ contactId: msg.from, ...msg });
-        } else {
-            console.warn('⚠️ Skipped block:', block);
+const parseBlock = (block: string) => {
+    const bodyMatch = block.match(/^\s*Body:\s+([\s\S]*?)(?:\n|$)/m);
+    const timestampMatch = block.match(/Message timestamp:\s+(\d+)/) || block.match(/Timestamp:\s+(\d+)/);
+    const groupMatch = block.match(/Group info:[\s\S]*?Id:\s+(.+)=/m);
+    const groupNameMatch = block.match(/Group info:[\s\S]*?Name:\s+(.+)/m);
+    let contactId: string | null = null;
+    let displayName: string | null = null;
+    let sender: string | null = null;
+
+    if (!bodyMatch) return null;
+
+    if (block.includes('Received sync sent message')) {
+        const toMatch = block.match(/^\s*To:\s+["“”]?(.+?)["“”]?\s+(\+[\d]+)/m);
+        if (toMatch) {
+            displayName = toMatch[1].trim();
+            sender = toMatch[2].trim();
+        }
+    } else {
+        const fromMatch = block.match(/Envelope from:\s+["“”]?(.+?)["“”]?\s+(\+[\d]+)/);
+        if (fromMatch) {
+            displayName = fromMatch[1].trim();
+            sender = fromMatch[2].trim();
         }
     }
 
-    saveMessages();
-    return messages;
+    if (!sender) return null;
+
+    contactId = groupMatch ? groupMatch[1] + '=' : sender;
+    displayName = groupMatch ? (groupNameMatch?.[1].trim() ?? 'Unknown Group') : displayName;
+
+    return {
+        contactId,
+        displayName,
+        message: {
+            from: sender,
+            body: bodyMatch[1].trim(),
+            timestamp: timestampMatch ? Number(timestampMatch[1]) : Date.now(),
+        },
+    };
 };
+
+
+
 
