@@ -38,7 +38,7 @@
                 <p class="text-xs text-gray-500 truncate">{{ contact.lastMessage }}</p>
               </div>
 
-              <!-- Unread badge -->
+              <!-- Status and time -->
               <div class="flex flex-col items-end gap-1">
                 <span class="text-xs text-gray-400">{{ formatTime(contact.lastTimestamp) }}</span>
                 <span
@@ -266,7 +266,6 @@ const fetchMessages = async (contactId: string) => {
     if (!res.ok) throw new Error('Failed to fetch messages')
 
     messages.value = await res.json()
-    unreadMap.value[contactId] = 0
   } catch (err) {
     console.error(`Error fetching messages for ${contactId}:`, err)
     messages.value = []
@@ -278,6 +277,7 @@ const selectContact = async (contactId: string) => {
 
   const contact = contacts.value.find((c) => c.id === contactId)
   selectedContactName.value = contact?.name ?? contactId
+  unreadMap.value[contactId] = 0
 
   await fetchMessages(contactId)
 }
@@ -303,6 +303,9 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
+
+    if (location.pathname.includes('/signal') && data.source !== 'signal') return
+    if (location.pathname.includes('/whatsapp') && data.source !== 'whatsapp') return
 
     const newMsg = {
       from: data.from,
