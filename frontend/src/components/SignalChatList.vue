@@ -6,7 +6,7 @@
       <div class="p-6 border-b border-gray-100">
         <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
           <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-          Signal Kontakty
+          Contacts
         </h2>
       </div>
 
@@ -14,7 +14,7 @@
       <div class="flex-1 overflow-y-auto">
         <ul class="divide-y divide-gray-100">
           <li
-            v-for="contact in contactList"
+            v-for="contact in contacts"
             :key="contact.id"
             @click="selectContact(contact.id)"
             :class="[
@@ -27,7 +27,7 @@
               <div
                 class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md"
               >
-                {{ contact.id.charAt(0).toUpperCase() }}
+                {{ contact.name.charAt(0).toUpperCase() }}
               </div>
 
               <!-- Contact info -->
@@ -35,7 +35,7 @@
                 <p class="text-sm font-semibold text-gray-900 truncate">
                   {{ contact.name }}
                 </p>
-                <p class="text-xs text-gray-500 truncate">Bezpieczna wiadomość...</p>
+                <p class="text-xs text-gray-500 truncate">{{ contact.lastMessage }}</p>
               </div>
 
               <!-- Status and time -->
@@ -242,11 +242,19 @@
 import { ref, onMounted } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
-const contactList = ref<{ id: string; name: string }[]>([])
+
+type Contact = {
+  id: string
+  name: string
+  lastTimestamp: number | null
+  lastMessage: string | null
+}
+
+const contacts = ref<Contact[]>([])
 const selectedContact = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
-const myNumber = ref('+4917623237640') // <- tu możesz wpisać własny numer
+const myNumber = ref(import.meta.env.VITE_MY_PHONE_NUMBER)
 
 const formatTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleTimeString('pl-PL', {
@@ -255,59 +263,38 @@ const formatTime = (timestamp: number) => {
   })
 }
 
-const fetchMessages = async () => {
+const fetchContacts = async () => {
   try {
     const res = await fetch(`${baseUrl}/api/signal/contacts`)
     if (!res.ok) throw new Error('Błąd pobierania kontaktów')
 
     const data = await res.json()
-    contactList.value = data
+    contacts.value = data
 
-    if (selectedContact.value) {
-      const messagesRes = await fetch(`${baseUrl}/api/signal/messages?from=${myNumber.value}`)
-      const messagesData = await messagesRes.json()
-      messages.value = messagesData[selectedContact.value] || []
+    if (data.length > 0 && !selectedContact.value) {
+      await selectContact(data[0].id)
     }
   } catch (error) {
-    console.error('Błąd:', error)
+    console.error('Błąd pobierania kontaktów:', error)
   }
 }
 
-console.log(contactList)
+const fetchMessages = async (contactId: string) => {
+  try {
+    const res = await fetch(
+      `${baseUrl}/api/signal/messages?contactId=${encodeURIComponent(contactId)}`,
+    )
+    const data = await res.json()
+    messages.value = data || []
+  } catch (error) {
+    console.error('Błąd pobierania wiadomości:', error)
+    messages.value = []
+  }
+}
+
 const selectContact = async (contactId: string) => {
   selectedContact.value = contactId
-
-  try {
-    await fetchMessages()
-  } catch (error) {
-    messages.value = [
-      {
-        from: contactId,
-        body: 'Cześć! Jak się masz?',
-        timestamp: Date.now() - 3600000,
-      },
-      {
-        from: 'me',
-        body: 'Wszystko w porządku, dzięki! A u Ciebie?',
-        timestamp: Date.now() - 3500000,
-      },
-      {
-        from: contactId,
-        body: 'Świetnie! Czy możemy się spotkać jutro?',
-        timestamp: Date.now() - 3400000,
-      },
-      {
-        from: 'me',
-        body: 'Jasne, o której godzinie?',
-        timestamp: Date.now() - 3300000,
-      },
-      {
-        from: contactId,
-        body: 'Może o 15:00 w kawiarni na rogu?',
-        timestamp: Date.now() - 3200000,
-      },
-    ]
-  }
+  await fetchMessages(contactId)
 }
 
 const sendMessage = async () => {
@@ -346,6 +333,22 @@ const sendMessage = async () => {
 }
 
 onMounted(() => {
-  fetchMessages()
+  fetchContacts()
+
+  const ws = new WebSocket(baseUrl.replace(/^http/, 'ws'))
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+
+    if (data.contactId === selectedContact.value) {
+      messages.value.push({
+        from: data.from,
+        body: data.body,
+        timestamp: data.timestamp,
+      })
+    } else {
+      console.log('🔔 Nowa wiadomość od:', data.contactId)
+    }
+  }
 })
 </script>
