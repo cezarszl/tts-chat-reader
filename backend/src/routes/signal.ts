@@ -26,14 +26,22 @@ router.get('/messages', (req, res) => {
 
 
 router.get('/contacts', async (req, res) => {
-
     const contacts = Object.keys(sessionMessages).map((id) => {
         const name = knownNames[id] || id;
-        const isGroup = id.endsWith('=');
-        return { id, name, isGroup };
+
+        const messages = sessionMessages[id] ?? [];
+        const lastMessage = messages[messages.length - 1];
+
+        return {
+            id,
+            name,
+            lastMessage: lastMessage?.body ?? null,
+            lastTimestamp: lastMessage?.timestamp ?? null,
+        };
     });
 
     res.json(contacts);
 });
+
 
 export default router;
