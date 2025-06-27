@@ -44,3 +44,6 @@ coverage
 
 *.tsbuildinfo
 backend/signal-history.json
+backend/src/signal/signal-names.json
+backend/src/signal/signal-history.json
+backend/src/whatsapp/whatsapp-history.json
