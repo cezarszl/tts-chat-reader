@@ -41,6 +41,12 @@
               <!-- Status and time -->
               <div class="flex flex-col items-end gap-1">
                 <span class="text-xs text-gray-400">{{ formatTime(contact.lastTimestamp) }}</span>
+                <span
+                  v-if="unreadMap[contact.id]"
+                  class="bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm animate-pulse"
+                >
+                  {{ unreadMap[contact.id] }}
+                </span>
               </div>
             </div>
 
@@ -114,23 +120,26 @@
             <div class="flex-1 relative">
               <input
                 v-model="newMessage"
-                placeholder="Napisz bezpieczną wiadomość..."
+                placeholder="Type a message..."
                 class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
                 rows="1"
               />
+              <!-- Emoji toggle button -->
               <button
                 type="button"
+                @click.stop="toggleEmojiPicker"
                 class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                  ></path>
-                </svg>
+                😀
               </button>
+              <!-- Emoji picker -->
+              <div
+                v-if="showEmojiPicker"
+                ref="emojiPickerRef"
+                class="absolute bottom-16 right-6 z-50"
+              >
+                <Picker :data="emojiIndex" set="apple" @select="addEmoji" />
+              </div>
             </div>
             <button
               type="submit"
@@ -187,7 +196,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
+import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
+import emojiData from 'emoji-mart-vue-fast/data/all.json'
+import 'emoji-mart-vue-fast/css/emoji-mart.css'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -202,8 +214,29 @@ const contacts = ref<Contact[]>([])
 const selectedContact = ref<string | null>(null)
 const selectedContactName = ref<string | null>(null)
 const newMessage = ref('')
+const unreadMap = ref<Record<string, number>>({})
 const myNumber = ref(import.meta.env.VITE_MY_PHONE_NUMBER)
 
+/* Emoji picker */
+const showEmojiPicker = ref(false)
+const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiIndex = new EmojiIndex(emojiData)
+
+const toggleEmojiPicker = () => {
+  showEmojiPicker.value = !showEmojiPicker.value
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (emojiPickerRef.value && !emojiPickerRef.value.contains(event.target as Node)) {
+    showEmojiPicker.value = false
+  }
+}
+
+const addEmoji = (emoji: any) => {
+  newMessage.value += emoji.native
+}
+
+/* Messages */
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const messageContainer = ref<HTMLElement | null>(null)
 
@@ -260,6 +293,7 @@ const selectContact = async (contactId: string) => {
   selectedContact.value = contactId
   const contact = contacts.value.find((c) => c.id === contactId)
   selectedContactName.value = contact?.name ?? contactId
+  unreadMap.value[contactId] = 0
   await fetchMessages(contactId)
 }
 
@@ -278,43 +312,62 @@ const sendMessage = async () => {
     })
 
     if (res.ok) {
-      messages.value.push({
-        from: 'me',
-        body: newMessage.value,
-        timestamp: Date.now(),
-      })
       newMessage.value = ''
     } else {
       throw new Error('Błąd wysyłania wiadomości')
     }
   } catch (error) {
     console.error('Błąd podczas wysyłania wiadomości:', error)
-    messages.value.push({
-      from: 'me',
-      body: newMessage.value,
-      timestamp: Date.now(),
-    })
-    newMessage.value = ''
   }
 }
 
 onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+
   fetchContacts()
 
   const ws = new WebSocket(baseUrl.replace(/^http/, 'ws'))
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
+    console.log('🔥 WS', data)
+
+    if (location.pathname.includes('/signal') && data.source !== 'signal') return
+    if (location.pathname.includes('/whatsapp') && data.source !== 'whatsapp') return
+
+    const newMsg = {
+      from: data.from,
+      body: data.body,
+      timestamp: data.timestamp,
+    }
 
     if (data.contactId === selectedContact.value) {
-      messages.value.push({
-        from: data.from,
-        body: data.body,
-        timestamp: data.timestamp,
-      })
+      messages.value.push(newMsg)
     } else {
-      console.log('🔔 Nowa wiadomość od:', data.contactId)
+      unreadMap.value[data.contactId] = (unreadMap.value[data.contactId] || 0) + 1
+    }
+
+    const contactIndex = contacts.value.findIndex((c) => c.id === data.contactId)
+    if (contactIndex !== -1) {
+      const contact = contacts.value[contactIndex]
+
+      contact.lastMessage = newMsg.body
+      contact.lastTimestamp = newMsg.timestamp
+
+      contacts.value.splice(contactIndex, 1)
+      contacts.value.unshift(contact)
+    } else {
+      contacts.value.unshift({
+        id: data.contactId,
+        name: data.contactId,
+        lastMessage: newMsg.body,
+        lastTimestamp: newMsg.timestamp,
+      })
     }
   }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
