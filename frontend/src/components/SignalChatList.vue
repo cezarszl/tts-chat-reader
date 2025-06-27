@@ -62,38 +62,10 @@
             <div
               class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md"
             >
-              {{ selectedContact?.charAt(0).toUpperCase() }}
+              {{ selectedContactName?.charAt(0).toUpperCase() }}
             </div>
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">{{ selectedContact }}</h2>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="ml-auto flex items-center gap-2">
-              <button
-                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  ></path>
-                </svg>
-              </button>
+              <h2 class="text-lg font-semibold text-gray-900">{{ selectedContactName }}</h2>
             </div>
           </div>
         </header>
@@ -131,30 +103,6 @@
                 ]"
               >
                 {{ formatTime(msg.timestamp) }}
-                <svg
-                  v-if="msg.from === 'me'"
-                  class="w-3 h-3"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <svg
-                  v-if="msg.from === 'me'"
-                  class="w-3 h-3 -ml-1"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
               </p>
             </div>
           </div>
@@ -252,6 +200,7 @@ type Contact = {
 
 const contacts = ref<Contact[]>([])
 const selectedContact = ref<string | null>(null)
+const selectedContactName = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const myNumber = ref(import.meta.env.VITE_MY_PHONE_NUMBER)
@@ -296,6 +245,8 @@ const fetchMessages = async (contactId: string) => {
 
 const selectContact = async (contactId: string) => {
   selectedContact.value = contactId
+  const contact = contacts.value.find((c) => c.id === contactId)
+  selectedContactName.value = contact?.name ?? contactId
   await fetchMessages(contactId)
 }
 
