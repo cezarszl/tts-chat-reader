@@ -55,7 +55,7 @@ export const signalSend = (from: string, to: string, message: string): Promise<s
                 sessionMessages[to].push(msg);
                 saveMessages();
 
-                broadcastMessage({ contactId: to, ...msg });
+                broadcastMessage({ contactId: to, ...msg, source: 'signal' });
 
                 resolve(stdout.toString().trim());
             }
@@ -101,7 +101,7 @@ export const receiveMessages = async (from: string) => {
         if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
         sessionMessages[contactId].push(message);
 
-        broadcastMessage({ contactId, ...message });
+        broadcastMessage({ contactId, ...message, source: 'signal' });
     }
     saveMessages();
 };
