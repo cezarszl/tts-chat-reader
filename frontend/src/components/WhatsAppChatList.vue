@@ -168,14 +168,18 @@
               <!-- Emoji toggle button -->
               <button
                 type="button"
-                @click="showEmojiPicker = !showEmojiPicker"
+                @click.stop="toggleEmojiPicker"
                 class="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
               >
                 😀
               </button>
 
               <!-- Emoji picker -->
-              <div v-if="showEmojiPicker" class="absolute bottom-16 right-6 z-50">
+              <div
+                v-if="showEmojiPicker"
+                ref="emojiPickerRef"
+                class="absolute bottom-16 right-6 z-50"
+              >
                 <Picker :data="emojiIndex" set="apple" @select="addEmoji" />
               </div>
             </div>
@@ -228,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
 import emojiData from 'emoji-mart-vue-fast/data/all.json'
 import 'emoji-mart-vue-fast/css/emoji-mart.css'
@@ -249,8 +253,21 @@ const selectedContactName = ref<string | null>(null)
 const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const unreadMap = ref<Record<string, number>>({})
+
+/* Emoji picker */
 const showEmojiPicker = ref(false)
+const emojiPickerRef = ref<HTMLElement | null>(null)
 const emojiIndex = new EmojiIndex(emojiData)
+
+const toggleEmojiPicker = () => {
+  showEmojiPicker.value = !showEmojiPicker.value
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (emojiPickerRef.value && !emojiPickerRef.value.contains(event.target as Node)) {
+    showEmojiPicker.value = false
+  }
+}
 
 const addEmoji = (emoji: any) => {
   newMessage.value += emoji.native
@@ -302,6 +319,8 @@ const sendMessage = async () => {
 }
 
 onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+
   fetchContacts()
 
   const ws = new WebSocket(baseUrl.replace(/^http/, 'ws'))
@@ -321,5 +340,9 @@ onMounted(() => {
       unreadMap.value[data.contactId] = (unreadMap.value[data.contactId] || 0) + 1
     }
   }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
