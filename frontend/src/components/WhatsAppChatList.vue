@@ -272,17 +272,26 @@ const fetchContacts = async () => {
   contacts.value = data.sort((a, b) => (b.lastTimestamp ?? 0) - (a.lastTimestamp ?? 0))
 }
 
+const fetchMessages = async (contactId: string) => {
+  try {
+    const res = await fetch(`${baseUrl}/api/whatsapp/messages/${contactId}`)
+    if (!res.ok) throw new Error('Failed to fetch messages')
+
+    messages.value = await res.json()
+    unreadMap.value[contactId] = 0
+  } catch (err) {
+    console.error(`Error fetching messages for ${contactId}:`, err)
+    messages.value = []
+  }
+}
+
 const selectContact = async (contactId: string) => {
   selectedContact.value = contactId
 
   const contact = contacts.value.find((c) => c.id === contactId)
   selectedContactName.value = contact?.name ?? contactId
 
-  const res = await fetch(`${baseUrl}/api/whatsapp/messages/${contactId}`)
-
-  messages.value = await res.json()
-
-  unreadMap.value[contactId] = 0
+  await fetchMessages(contactId)
 }
 
 const sendMessage = async () => {
