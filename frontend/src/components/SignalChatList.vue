@@ -40,7 +40,7 @@
 
               <!-- Status and time -->
               <div class="flex flex-col items-end gap-1">
-                <span class="text-xs text-gray-400">15:42</span>
+                <span class="text-xs text-gray-400">{{ formatTime(contact.lastTimestamp) }}</span>
               </div>
             </div>
 
@@ -256,10 +256,12 @@ const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const myNumber = ref(import.meta.env.VITE_MY_PHONE_NUMBER)
 
-const formatTime = (timestamp: number) => {
-  return new Date(timestamp).toLocaleTimeString('pl-PL', {
+const formatTime = (timestamp: number | null) => {
+  if (!timestamp) return ''
+  return new Date(timestamp).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   })
 }
 
