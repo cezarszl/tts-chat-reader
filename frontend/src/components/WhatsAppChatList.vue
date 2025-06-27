@@ -303,12 +303,6 @@ const sendMessage = async () => {
     body: JSON.stringify({ to: selectedContact.value, message: newMessage.value }),
   })
 
-  messages.value.push({
-    from: 'me',
-    body: newMessage.value,
-    timestamp: Date.now(),
-  })
-
   newMessage.value = ''
 }
 
