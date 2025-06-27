@@ -106,7 +106,7 @@
         </header>
 
         <!-- Messages area -->
-        <div class="overflow-y-auto p-6 space-y-4">
+        <div ref="messageContainer" class="overflow-y-auto p-6 space-y-4">
           <div
             v-for="(msg, index) in messages"
             :key="msg.timestamp"
@@ -232,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
 import emojiData from 'emoji-mart-vue-fast/data/all.json'
 import 'emoji-mart-vue-fast/css/emoji-mart.css'
@@ -247,10 +247,8 @@ type Contact = {
 }
 
 const contacts = ref<Contact[]>([])
-
 const selectedContact = ref<string | null>(null)
 const selectedContactName = ref<string | null>(null)
-const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
 const newMessage = ref('')
 const unreadMap = ref<Record<string, number>>({})
 
@@ -272,6 +270,21 @@ const handleClickOutside = (event: MouseEvent) => {
 const addEmoji = (emoji: any) => {
   newMessage.value += emoji.native
 }
+
+/* Messages */
+const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
+const messageContainer = ref<HTMLElement | null>(null)
+
+watch(
+  messages,
+  async () => {
+    await nextTick()
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  },
+  { deep: true, flush: 'post' },
+)
 
 const formatTime = (timestamp: number | null) => {
   if (!timestamp) return ''
