@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
 
-const historyPath = path.resolve(__dirname, 'chat-history.json');
+const historyPath = path.resolve(__dirname, 'whatsapp-history.json');
 
 export let qrCodeBase64 = '';
 export let isAuthenticated = false;
