@@ -41,7 +41,6 @@
               <!-- Status and time -->
               <div class="flex flex-col items-end gap-1">
                 <span class="text-xs text-gray-400">15:42</span>
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               </div>
             </div>
 
@@ -67,16 +66,6 @@
             </div>
             <div>
               <h2 class="text-lg font-semibold text-gray-900">{{ selectedContact }}</h2>
-              <p class="text-sm text-blue-600 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fill-rule="evenodd"
-                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                Zaszyfrowane end-to-end
-              </p>
             </div>
 
             <!-- Action buttons -->
@@ -167,22 +156,6 @@
                   />
                 </svg>
               </p>
-            </div>
-          </div>
-
-          <!-- Encryption notice -->
-          <div class="flex justify-center my-8">
-            <div
-              class="bg-blue-100 border border-blue-200 rounded-lg px-4 py-2 flex items-center gap-2 text-xs text-blue-700"
-            >
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Twoje wiadomości są chronione szyfrowaniem end-to-end
             </div>
           </div>
         </div>
