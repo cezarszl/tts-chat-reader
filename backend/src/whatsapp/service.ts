@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
 
-const historyPath = path.resolve(__dirname, '../../chat-history.json');
+const historyPath = path.resolve(__dirname, 'chat-history.json');
 
 export let qrCodeBase64 = '';
 export let isAuthenticated = false;
@@ -64,6 +64,8 @@ whatsappClient.on('message', async (message) => {
 whatsappClient.on('message_create', async (msg) => {
     if (!msg.fromMe) return;
 
+
+
     const contactId = msg.to;
 
     const outgoing = {
@@ -109,3 +111,4 @@ whatsappClient.on('ready', async () => {
 
 
 whatsappClient.initialize();
+
