@@ -313,16 +313,34 @@ onMounted(() => {
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
 
-    if (data.contactId === selectedContact.value) {
-      messages.value.push({
-        from: data.from,
-        body: data.body,
-        timestamp: data.timestamp,
-      })
+    const newMsg = {
+      from: data.from,
+      body: data.body,
+      timestamp: data.timestamp,
     }
 
-    if (data.contactId !== selectedContact.value) {
+    if (data.contactId === selectedContact.value) {
+      messages.value.push(newMsg)
+    } else {
       unreadMap.value[data.contactId] = (unreadMap.value[data.contactId] || 0) + 1
+    }
+
+    const contactIndex = contacts.value.findIndex((c) => c.id === data.contactId)
+    if (contactIndex !== -1) {
+      const contact = contacts.value[contactIndex]
+
+      contact.lastMessage = newMsg.body
+      contact.lastTimestamp = newMsg.timestamp
+
+      contacts.value.splice(contactIndex, 1)
+      contacts.value.unshift(contact)
+    } else {
+      contacts.value.unshift({
+        id: data.contactId,
+        name: data.contactId,
+        lastMessage: newMsg.body,
+        lastTimestamp: newMsg.timestamp,
+      })
     }
   }
 })
