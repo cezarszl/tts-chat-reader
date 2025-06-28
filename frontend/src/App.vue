@@ -1,13 +1,14 @@
 <template>
   <div class="flex flex-col h-screen bg-gray-100 relative">
     <!-- Chat view -->
-    <div class="flex-1 bg-white rounded-t-3xl shadow-inner relative overflow-hidden pt-16">
+    <div class="flex-1 bg-white rounded-t-3xl shadow-inner relative overflow-hidden">
       <div
-        class="absolute top-5 left-1/2 -translate-x-1/2 -translate-y-1/2 flex bg-white rounded-full p-1 shadow-2xl z-30"
+        class="absolute top-2 right-6 flex justify-end bg-white rounded-full p-1 shadow-2xl z-30"
       >
         <button
           @click="activeTab = 'whatsapp'"
           :class="[
+            'pointer-events-auto',
             'flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-300 font-medium',
             activeTab === 'whatsapp'
               ? 'bg-green-500 text-white shadow-lg'
@@ -25,6 +26,7 @@
         <button
           @click="activeTab = 'signal'"
           :class="[
+            'pointer-events-auto',
             'flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-300 font-medium',
             activeTab === 'signal'
               ? 'bg-blue-600 text-white shadow-lg'
