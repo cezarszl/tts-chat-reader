@@ -58,10 +58,10 @@ whatsappClient.on('message', async (message) => {
     sessionMessages[contactId].push(msg);
     saveMessages();
 
-    broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
     const senderName = contact.pushname || contact.name || contact.number || contactId;
     const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
-    await speakText(announcement);
+    const { audioId } = await speakText(announcement);
+    broadcastMessage({ contactId, ...msg, source: 'whatsapp', audioId });
 });
 
 
