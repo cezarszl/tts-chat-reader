@@ -181,7 +181,7 @@
           </div>
           <h3 class="text-xl font-semibold text-gray-900 mb-2">Welcome to Signal</h3>
           <p class="text-gray-500 max-w-sm mb-4">
-            Select a contact from the list on the left to start a secure conversation
+            Select a contact from the list on the left to start a conversation
           </p>
         </div>
       </div>
