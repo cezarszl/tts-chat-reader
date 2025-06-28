@@ -7,7 +7,7 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID!;
 const OUTPUT_DIR = path.resolve(__dirname, 'audio');
 
-export const speakText = async (text: string): Promise<string> => {
+export const speakText = async (text: string): Promise<{ audioId: string; path: string }> => {
     const filename = `${uuid()}.mp3`;
     const filePath = path.join(OUTPUT_DIR, filename);
 
@@ -32,7 +32,7 @@ export const speakText = async (text: string): Promise<string> => {
     response.data.pipe(writer);
 
     return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve(filePath));
+        writer.on('finish', () => resolve({ audioId: filename.replace('.mp3', ''), path: filePath }));
         writer.on('error', reject);
     });
 };
