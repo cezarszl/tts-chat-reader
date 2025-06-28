@@ -78,15 +78,12 @@ export const signalReceive = (from: string): Promise<string> => {
 };
 
 export const receiveMessages = async (from: string) => {
-    console.log('📥 signalReceive for:', from);
     const output = await signalReceive(from);
-
     const blocks = output.trim().split('\n\n');
 
     for (const block of blocks) {
         const parsed = parseBlock(block);
         if (!parsed) {
-            console.warn('⛔ Skipped block:\n', block);
             continue;
         }
 
@@ -95,7 +92,6 @@ export const receiveMessages = async (from: string) => {
         if (!knownNames[contactId]) {
             knownNames[contactId] = displayName!;
             saveNames();
-            console.log(`💾 Saved contact name: ${contactId} = "${displayName}"`);
         }
 
         if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
