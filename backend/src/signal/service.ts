@@ -97,7 +97,7 @@ export const receiveMessages = async (from: string) => {
         if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
         sessionMessages[contactId].push(message);
 
-        broadcastMessage({ contactId, ...message });
+        broadcastMessage({ contactId, ...message, source: 'signal' });
         const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
         await speakText(announcement);
 

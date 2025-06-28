@@ -58,7 +58,7 @@ whatsappClient.on('message', async (message) => {
     sessionMessages[contactId].push(msg);
     saveMessages();
 
-    broadcastMessage({ contactId, ...msg });
+    broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
     const senderName = contact.pushname || contact.name || contact.number || contactId;
     const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
     await speakText(announcement);
@@ -85,7 +85,7 @@ whatsappClient.on('message_create', async (msg) => {
     sessionMessages[contactId].push(outgoing);
     saveMessages();
 
-    broadcastMessage({ contactId, ...outgoing });
+    broadcastMessage({ contactId, ...outgoing, source: 'whatsapp' });
 });
 
 
