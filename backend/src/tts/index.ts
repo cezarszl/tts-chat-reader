@@ -1,0 +1,1 @@
+export { speakText } from './service';
