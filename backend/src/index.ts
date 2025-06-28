@@ -5,7 +5,7 @@ import './whatsapp';
 import * as dotenv from 'dotenv';
 import { setupWebSocket } from './ws';
 import { createServer } from 'http';
-import { receiveMessages } from './signal/service';
+import { receiveMessages, checkSignalReady } from './signal/';
 
 dotenv.config();
 
@@ -27,6 +27,8 @@ setupWebSocket(server);
 server.listen(port, () => {
     console.log(`🚀 Backend running at ${baseUrl}:${port}`);
 });
+
+checkSignalReady();
 
 setInterval(async () => {
     try {

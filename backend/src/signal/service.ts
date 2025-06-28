@@ -143,6 +143,17 @@ const parseBlock = (block: string) => {
     };
 };
 
+export const checkSignalReady = () => {
+    const cmd = `${SIGNAL_CLI_PATH} --config ${CONFIG_DIR} -a ${MY_NUMBER} listDevices`;
+
+    exec(cmd, (err, stdout, stderr) => {
+        if (err) {
+            console.error('❌ Signal is not authenticated or not registered:', stderr.trim());
+        } else {
+            console.log('✅ Signal client is authenticated and ready!');
+        }
+    });
+};
 
 
 

@@ -1,1 +1,1 @@
-export { signalSend, signalReceive, receiveMessages, sessionMessages, knownNames, MY_NUMBER } from './service';
+export { signalSend, signalReceive, receiveMessages, sessionMessages, knownNames, MY_NUMBER, checkSignalReady } from './service';
