@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
+import { speakText } from '../tts';
 
 const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/signal-cli';
 const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
@@ -97,6 +98,10 @@ export const receiveMessages = async (from: string) => {
         sessionMessages[contactId].push(message);
 
         broadcastMessage({ contactId, ...message, source: 'signal' });
+        const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
+        await speakText(announcement);
+
+
     }
     saveMessages();
 };
