@@ -1,8 +1,9 @@
-import { Client, LocalAuth, Message } from 'whatsapp-web.js';
+import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
+import { speakText } from '../tts';
 
 const historyPath = path.resolve(__dirname, 'whatsapp-history.json');
 
@@ -58,6 +59,9 @@ whatsappClient.on('message', async (message) => {
     saveMessages();
 
     broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
+    const senderName = contact.pushname || contact.name || contact.number || contactId;
+    const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
+    await speakText(announcement);
 });
 
 
