@@ -8,8 +8,7 @@ const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
 const historyPath = path.resolve(__dirname, 'signal-history.json');
 const namesPath = path.resolve(__dirname, 'signal-names.json');
 
-import * as dotenv from 'dotenv';
-dotenv.config();
+
 
 export const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 

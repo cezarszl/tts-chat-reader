@@ -1,13 +1,13 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import routes from './routes';
 import './whatsapp';
-import * as dotenv from 'dotenv';
 import { setupWebSocket } from './ws';
 import { createServer } from 'http';
 import { receiveMessages, checkSignalReady } from './signal/';
 
-dotenv.config();
 
 const baseUrl = process.env.API_BASE_URL;
 const port = process.env.BACKEND_PORT;
