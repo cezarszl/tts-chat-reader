@@ -327,6 +327,11 @@ onMounted(() => {
       from: data.from,
       body: data.body,
       timestamp: data.timestamp,
+      audioId: data.audioId,
+    }
+    if (newMsg.audioId) {
+      const audio = new Audio(`${baseUrl}/api/tts/${newMsg.audioId}`)
+      audio.play()
     }
 
     if (data.contactId === selectedContact.value) {
