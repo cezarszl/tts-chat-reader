@@ -267,10 +267,6 @@ const fetchContacts = async () => {
 
     const data = await res.json()
     contacts.value = data
-
-    if (data.length > 0 && !selectedContact.value) {
-      await selectContact(data[0].id)
-    }
   } catch (error) {
     console.error('Błąd pobierania kontaktów:', error)
   }
