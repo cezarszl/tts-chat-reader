@@ -160,35 +160,29 @@
       </div>
 
       <!-- Empty state -->
-      <div v-else class="flex-1 flex items-center justify-center">
+      <div v-else class="flex-1 flex items-center justify-center mt-10">
         <div class="text-center">
           <div
             class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
-            <svg class="w-12 h-12 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              class="w-12 h-12 text-blue-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
-                fill-rule="evenodd"
-                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                clip-rule="evenodd"
-              />
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              ></path>
             </svg>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Witaj w Signal</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Welcome to Signal</h3>
           <p class="text-gray-500 max-w-sm mb-4">
-            Wybierz kontakt z listy po lewej stronie, aby rozpocząć bezpieczną konwersację
+            Select a contact from the list on the left to start a secure conversation
           </p>
-          <div
-            class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-xs text-blue-700 inline-flex items-center gap-2"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Prywatność jest domyślnie włączona
-          </div>
         </div>
       </div>
     </main>
@@ -263,12 +257,12 @@ const formatTime = (timestamp: number | null) => {
 const fetchContacts = async () => {
   try {
     const res = await fetch(`${baseUrl}/api/signal/contacts`)
-    if (!res.ok) throw new Error('Błąd pobierania kontaktów')
+    if (!res.ok) throw new Error('Failed to fetch contacts')
 
     const data = await res.json()
     contacts.value = data
   } catch (error) {
-    console.error('Błąd pobierania kontaktów:', error)
+    console.error('Error while fetching contacts:', error)
   }
 }
 
@@ -280,7 +274,7 @@ const fetchMessages = async (contactId: string) => {
     const data = await res.json()
     messages.value = data || []
   } catch (error) {
-    console.error('Błąd pobierania wiadomości:', error)
+    console.error('Error while fetching messages:', error)
     messages.value = []
   }
 }
@@ -310,10 +304,10 @@ const sendMessage = async () => {
     if (res.ok) {
       newMessage.value = ''
     } else {
-      throw new Error('Błąd wysyłania wiadomości')
+      throw new Error('Failed to send message')
     }
   } catch (error) {
-    console.error('Błąd podczas wysyłania wiadomości:', error)
+    console.error('Error while sending message:', error)
   }
 }
 
@@ -326,10 +320,9 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    console.log('🔥 WS', data)
 
-    if (location.pathname.includes('/signal') && data.source !== 'signal') return
-    if (location.pathname.includes('/whatsapp') && data.source !== 'whatsapp') return
+    if (data.source !== 'signal') return
+    if (data.source !== 'whatsapp') return
 
     const newMsg = {
       from: data.from,
