@@ -161,7 +161,7 @@
       </div>
 
       <!-- Empty state -->
-      <div v-else class="flex-1 flex items-center justify-center">
+      <div v-else class="flex-1 flex items-center justify-center mt-10">
         <div class="text-center">
           <div
             class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -304,8 +304,8 @@ onMounted(() => {
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
 
-    if (location.pathname.includes('/signal') && data.source !== 'signal') return
-    if (location.pathname.includes('/whatsapp') && data.source !== 'whatsapp') return
+    if (data.source !== 'signal') return
+    if (data.source !== 'whatsapp') return
 
     const newMsg = {
       from: data.from,
