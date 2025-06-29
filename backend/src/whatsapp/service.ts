@@ -58,10 +58,20 @@ whatsappClient.on('message', async (message) => {
     sessionMessages[contactId].push(msg);
     saveMessages();
 
+    if (Date.now() - msg.timestamp > 10_000) {
+        broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
+        return;
+    }
     const senderName = contact.pushname || contact.name || contact.number || contactId;
     const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
-    const { audioId } = await speakText(announcement);
-    broadcastMessage({ contactId, ...msg, source: 'whatsapp', audioId });
+    let audioId: string | undefined;
+    try {
+        const result = await speakText(announcement);
+        audioId = result.audioId;
+    } catch (err) {
+        console.error('[TTS ERROR - Signal]:', (err as Error).message);
+    }
+    broadcastMessage({ contactId, ...message, source: 'signal', audioId });
 });
 
 
