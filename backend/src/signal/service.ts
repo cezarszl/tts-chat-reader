@@ -54,9 +54,9 @@ export const signalSend = (from: string, to: string, message: string): Promise<s
                 if (!sessionMessages[to]) sessionMessages[to] = [];
                 sessionMessages[to].push(msg);
                 saveMessages();
-
-                broadcastMessage({ contactId: to, ...msg, source: 'signal' });
-
+                if (Date.now() - msg.timestamp > 10_000) {
+                    broadcastMessage({ contactId: to, ...msg, source: 'signal' });
+                }
                 resolve(stdout.toString().trim());
             }
         });
@@ -97,6 +97,10 @@ export const receiveMessages = async (from: string) => {
         if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
         sessionMessages[contactId].push(message);
 
+        if (Date.now() - message.timestamp > 10_000) {
+            broadcastMessage({ contactId, ...message, source: 'whatsapp' });
+            return;
+        }
         const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
         const { audioId } = await speakText(announcement);
         broadcastMessage({ contactId, ...message, source: 'signal', audioId });
