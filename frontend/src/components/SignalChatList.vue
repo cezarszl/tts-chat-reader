@@ -80,7 +80,7 @@
         <div ref="messageContainer" class="overflow-y-auto p-6 space-y-4">
           <div
             v-for="(msg, index) in messages"
-            :key="msg.timestamp"
+            :key="`${msg.timestamp}-${index}`"
             :class="['flex', msg.from === 'me' ? 'justify-end' : 'justify-start']"
           >
             <div
