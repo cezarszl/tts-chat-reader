@@ -78,37 +78,46 @@ export const signalReceive = (from: string): Promise<string> => {
 };
 
 export const receiveMessages = async (from: string) => {
-    const output = await signalReceive(from);
-    const blocks = output.trim().split('\n\n');
+    try {
+        const output = await signalReceive(from);
+        const blocks = output.trim().split('\n\n');
 
-    for (const block of blocks) {
-        const parsed = parseBlock(block);
-        if (!parsed) {
-            continue;
+        for (const block of blocks) {
+            try {
+                const parsed = parseBlock(block);
+                if (!parsed) continue;
+
+                const { contactId, displayName, message } = parsed;
+
+                if (!knownNames[contactId]) {
+                    knownNames[contactId] = displayName!;
+                    saveNames();
+                }
+
+                if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
+                sessionMessages[contactId].push(message);
+
+                // If the message is older than 10 seconds, skip TTS and just broadcast
+                if (Date.now() - message.timestamp > 10_000) {
+                    broadcastMessage({ contactId, ...message, source: 'signal' });
+                    continue;
+                }
+
+                const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
+                const { audioId } = await speakText(announcement);
+
+                broadcastMessage({ contactId, ...message, source: 'signal', audioId });
+            } catch (err) {
+                console.error('⚠️ Error while processing a single message block:', err);
+            }
         }
 
-        const { contactId, displayName, message } = parsed;
-
-        if (!knownNames[contactId]) {
-            knownNames[contactId] = displayName!;
-            saveNames();
-        }
-
-        if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
-        sessionMessages[contactId].push(message);
-
-        if (Date.now() - message.timestamp > 10_000) {
-            broadcastMessage({ contactId, ...message, source: 'whatsapp' });
-            return;
-        }
-        const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-        const { audioId } = await speakText(announcement);
-        broadcastMessage({ contactId, ...message, source: 'signal', audioId });
-
-
+        saveMessages();
+    } catch (err) {
+        console.error('❌ Error in receiveMessages (whole batch):', err);
     }
-    saveMessages();
 };
+
 
 const parseBlock = (block: string) => {
     const bodyMatch = block.match(/^\s*Body:\s+([\s\S]*?)(?:\n|$)/m);
