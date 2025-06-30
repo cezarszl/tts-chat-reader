@@ -101,7 +101,17 @@
                 class="absolute -left-1 bottom-0 w-0 h-0 border-r-8 border-r-white border-t-8 border-t-transparent"
               ></div>
 
-              <p class="text-sm leading-relaxed">{{ msg.body }}</p>
+              <p class="text-sm leading-relaxed">
+                {{ msg.body }}
+                <button
+                  v-if="msg.audioId"
+                  @click="replayMessage(msg.audioId)"
+                  class="ml-2 text-blue-500 hover:underline text-xs"
+                  title="Odtwórz wiadomość"
+                >
+                  ▶️
+                </button>
+              </p>
               <p
                 :class="[
                   'text-xs mt-1 flex items-center gap-1',
@@ -231,7 +241,7 @@ const addEmoji = (emoji: any) => {
 }
 
 /* Messages */
-const messages = ref<{ from: string; body: string; timestamp: number }[]>([])
+const messages = ref<{ from: string; body: string; timestamp: number; audioId: string }[]>([])
 const messageContainer = ref<HTMLElement | null>(null)
 
 watch(
@@ -244,6 +254,14 @@ watch(
   },
   { deep: true, flush: 'post' },
 )
+
+/* Audio Replay */
+const replayMessage = (audioId: string) => {
+  const audio = new Audio(`${baseUrl}/api/tts/${audioId}`)
+  audio.play().catch((err) => {
+    console.error('Audio playback failed:', err)
+  })
+}
 
 const formatTime = (timestamp: number | null) => {
   if (!timestamp) return ''
