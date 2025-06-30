@@ -95,18 +95,22 @@ export const receiveMessages = async (from: string) => {
                 }
 
                 if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
-                sessionMessages[contactId].push(message);
 
                 // If the message is older than 10 seconds, skip TTS and just broadcast
                 if (Date.now() - message.timestamp > 10_000) {
+                    sessionMessages[contactId].push(message);
                     broadcastMessage({ contactId, ...message, source: 'signal' });
                     continue;
+                } else {
+                    const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
+                    const { audioId } = await speakText(announcement);
+                    const fullMsg = { ...message, audioId };
+                    sessionMessages[contactId].push(fullMsg);
+
+                    broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
+
                 }
 
-                const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-                const { audioId } = await speakText(announcement);
-
-                broadcastMessage({ contactId, ...message, source: 'signal', audioId });
             } catch (err) {
                 console.error('⚠️ Error while processing a single message block:', err);
             }
