@@ -55,23 +55,22 @@ whatsappClient.on('message', async (message) => {
         sessionMessages[contactId] = [];
     }
 
-    sessionMessages[contactId].push(msg);
+    // If the message is older than 10 seconds, skip TTS and just broadcast
     saveMessages();
-
     if (Date.now() - msg.timestamp > 10_000) {
+        sessionMessages[contactId].push(msg);
         broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
         return;
+    } else {
+        const senderName = contact.pushname || contact.name || contact.number || contactId;
+        const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
+        const { audioId } = await speakText(announcement);
+        const fullMsg = { ...message, audioId };
+
+        sessionMessages[contactId].push(msg);
+        broadcastMessage({ contactId, ...fullMsg, source: 'whatsapp' });
+
     }
-    const senderName = contact.pushname || contact.name || contact.number || contactId;
-    const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
-    let audioId: string | undefined;
-    try {
-        const result = await speakText(announcement);
-        audioId = result.audioId;
-    } catch (err) {
-        console.error('[TTS ERROR - Signal]:', (err as Error).message);
-    }
-    broadcastMessage({ contactId, ...message, source: 'signal', audioId });
 });
 
 
