@@ -35,6 +35,9 @@ const saveMessages = () => {
     fs.writeFileSync(historyPath, JSON.stringify(sessionMessages, null, 2));
 };
 
+
+
+
 whatsappClient.on('message', async (message) => {
 
     if (message.from === 'status@broadcast') {
@@ -55,8 +58,9 @@ whatsappClient.on('message', async (message) => {
         sessionMessages[contactId] = [];
     }
 
+
     // If the message is older than 10 seconds, skip TTS and just broadcast
-    if (Date.now() - msg.timestamp > 5_000) {
+    if (Date.now() - msg.timestamp > 10_000) {
         sessionMessages[contactId].push(msg);
         broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
         return;
@@ -116,10 +120,16 @@ whatsappClient.on('auth_failure', msg => {
     isAuthenticated = false;
 });
 
+
+let isWarmingUp = true;
+
 whatsappClient.on('ready', async () => {
 
     console.log('✅ WhatsApp client is ready!');
-
+    setTimeout(() => {
+        isWarmingUp = false;
+        console.log('🔥 Warming up finished, TTS is enabled');
+    }, 5000);
 });
 
 
