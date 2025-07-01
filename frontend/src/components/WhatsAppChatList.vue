@@ -336,7 +336,7 @@ onMounted(() => {
 
     if (data.contactId === selectedContact.value) {
       messages.value.push(newMsg)
-    } else {
+    } else if (data.from !== 'me') {
       unreadMap.value[data.contactId] = (unreadMap.value[data.contactId] || 0) + 1
     }
 
