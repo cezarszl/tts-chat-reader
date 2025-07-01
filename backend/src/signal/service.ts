@@ -110,13 +110,13 @@ export const receiveMessages = async (from: string) => {
                     broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
 
                 }
+                saveMessages();
 
             } catch (err) {
                 console.error('⚠️ Error while processing a single message block:', err);
             }
         }
 
-        saveMessages();
     } catch (err) {
         console.error('❌ Error in receiveMessages (whole batch):', err);
     }
