@@ -77,6 +77,13 @@ export const signalReceive = (from: string): Promise<string> => {
     });
 };
 
+let isWarmingUp = true;
+
+setTimeout(() => {
+    isWarmingUp = false;
+    console.log('🔥 Signal TTS warmup finished');
+}, 5000);
+
 export const receiveMessages = async (from: string) => {
     try {
         const output = await signalReceive(from);
@@ -97,7 +104,7 @@ export const receiveMessages = async (from: string) => {
                 if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
 
                 // If the message is older than 10 seconds, skip TTS and just broadcast
-                if (Date.now() - message.timestamp > 10_000) {
+                if (isWarmingUp || Date.now() - message.timestamp > 10_000) {
                     sessionMessages[contactId].push(message);
                     broadcastMessage({ contactId, ...message, source: 'signal' });
                     continue;
