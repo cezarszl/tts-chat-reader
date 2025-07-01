@@ -57,7 +57,7 @@ whatsappClient.on('message', async (message) => {
 
     // If the message is older than 10 seconds, skip TTS and just broadcast
     saveMessages();
-    if (Date.now() - msg.timestamp > 10_000) {
+    if (Date.now() - msg.timestamp > 5_000) {
         sessionMessages[contactId].push(msg);
         broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
         return;
