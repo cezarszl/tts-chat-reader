@@ -56,7 +56,6 @@ whatsappClient.on('message', async (message) => {
     }
 
     // If the message is older than 10 seconds, skip TTS and just broadcast
-    saveMessages();
     if (Date.now() - msg.timestamp > 5_000) {
         sessionMessages[contactId].push(msg);
         broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
@@ -65,12 +64,13 @@ whatsappClient.on('message', async (message) => {
         const senderName = contact.pushname || contact.name || contact.number || contactId;
         const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
         const { audioId } = await speakText(announcement);
-        const fullMsg = { ...message, audioId };
+        const fullMsg = { ...msg, audioId };
 
-        sessionMessages[contactId].push(msg);
+        sessionMessages[contactId].push(fullMsg);
         broadcastMessage({ contactId, ...fullMsg, source: 'whatsapp' });
 
     }
+    saveMessages();
 });
 
 
