@@ -109,8 +109,9 @@
                   v-if="msg.mediaType === 'image'"
                   :src="baseUrl + msg.mediaUrl"
                   class="max-w-xs rounded"
+                  @load="scrollToBottom"
                 />
-                <video v-else controls class="max-w-xs rounded">
+                <video v-else controls class="max-w-xs rounded" @loadedmetadata="scrollToBottom">
                   <source :src="baseUrl + msg.mediaUrl" />
                 </video>
               </div>
@@ -265,6 +266,14 @@ interface Message {
 
 const messages = ref<Message[]>([])
 const messageContainer = ref<HTMLElement | null>(null)
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  })
+}
 
 watch(
   messages,
