@@ -380,6 +380,7 @@ onMounted(() => {
         name: data.contactId,
         lastMessage: newMsg.body,
         lastTimestamp: newMsg.timestamp,
+        lastMediaType: newMsg.mediaType,
       })
     }
   }
