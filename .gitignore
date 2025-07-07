@@ -49,3 +49,5 @@ backend/src/signal/signal-history.json
 backend/src/whatsapp/whatsapp-history.json
 backend/src/tts/audio/*
 !backend/src/tts/audio/.gitkeep
+backend/uploads
+
