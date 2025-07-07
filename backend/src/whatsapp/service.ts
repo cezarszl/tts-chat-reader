@@ -81,25 +81,49 @@ whatsappClient.on('message', async (message) => {
 whatsappClient.on('message_create', async (msg) => {
     if (!msg.fromMe) return;
 
-
-
     const contactId = msg.to;
-
-    const outgoing = {
-        from: 'me',
-        body: msg.body,
-        timestamp: Date.now(),
-    };
 
     if (!sessionMessages[contactId]) {
         sessionMessages[contactId] = [];
     }
 
-    sessionMessages[contactId].push(outgoing);
-    saveMessages();
+    if (msg.hasMedia) {
+        const media = await msg.downloadMedia();
+        if (!media) return;
 
-    broadcastMessage({ contactId, ...outgoing, source: 'whatsapp' });
+        const mimeType = media.mimetype;
+        const extension = mimeType.split('/')[1];
+        const fileName = `media-${Date.now()}.${extension}`;
+        const filePath = path.resolve(__dirname, '../../uploads', fileName);
+
+        fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
+
+        const type = mimeType.startsWith('image') ? 'image' : 'video';
+
+        const mediaMsg = {
+            from: 'me',
+            body: msg.body,
+            timestamp: Date.now(),
+            mediaUrl: `/uploads/${fileName}`,
+            mediaType: type
+        };
+
+        sessionMessages[contactId].push(mediaMsg);
+        saveMessages();
+        broadcastMessage({ contactId, ...mediaMsg, source: 'whatsapp' });
+    } else {
+        const outgoing = {
+            from: 'me',
+            body: msg.body,
+            timestamp: Date.now(),
+        };
+
+        sessionMessages[contactId].push(outgoing);
+        saveMessages();
+        broadcastMessage({ contactId, ...outgoing, source: 'whatsapp' });
+    }
 });
+
 
 
 
