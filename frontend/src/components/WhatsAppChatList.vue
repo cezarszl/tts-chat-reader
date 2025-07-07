@@ -35,7 +35,11 @@
                 <p class="text-sm font-semibold text-gray-900 truncate">
                   {{ contact.name }}
                 </p>
-                <p class="text-xs text-gray-500 truncate">{{ contact.lastMessage }}</p>
+                <p class="text-xs text-gray-500 truncate">
+                  <span v-if="contact.lastMediaType === 'image'">🖼 Image</span>
+                  <span v-else-if="contact.lastMediaType === 'video'">🎬 Video</span>
+                  <span v-else>{{ contact.lastMessage }}</span>
+                </p>
               </div>
 
               <!-- Status and time -->
@@ -100,7 +104,16 @@
                 v-else
                 class="absolute -left-1 bottom-0 w-0 h-0 border-r-8 border-r-white border-t-8 border-t-transparent"
               ></div>
-
+              <div v-if="msg.mediaUrl">
+                <img
+                  v-if="msg.mediaType === 'image'"
+                  :src="baseUrl + msg.mediaUrl"
+                  class="max-w-xs rounded"
+                />
+                <video v-else controls class="max-w-xs rounded">
+                  <source :src="baseUrl + msg.mediaUrl" />
+                </video>
+              </div>
               <p class="text-sm leading-relaxed">
                 {{ msg.body }}
                 <button
@@ -213,6 +226,7 @@ type Contact = {
   name: string
   lastTimestamp: number | null
   lastMessage: string | null
+  lastMediaType: string | null
 }
 
 const contacts = ref<Contact[]>([])
@@ -240,8 +254,16 @@ const addEmoji = (emoji: any) => {
   newMessage.value += emoji.native
 }
 
-/* Messages */
-const messages = ref<{ from: string; body: string; timestamp: number; audioId: string }[]>([])
+interface Message {
+  from: string
+  body: string
+  timestamp: number
+  mediaUrl?: string
+  audioId?: string
+  mediaType?: string
+}
+
+const messages = ref<Message[]>([])
 const messageContainer = ref<HTMLElement | null>(null)
 
 watch(
@@ -328,6 +350,8 @@ onMounted(() => {
       body: data.body,
       timestamp: data.timestamp,
       audioId: data.audioId,
+      mediaUrl: data.mediaUrl,
+      mediaType: data.mediaType,
     }
     if (newMsg.audioId) {
       const audio = new Audio(`${baseUrl}/api/tts/${newMsg.audioId}`)
@@ -346,6 +370,7 @@ onMounted(() => {
 
       contact.lastMessage = newMsg.body
       contact.lastTimestamp = newMsg.timestamp
+      contact.lastMediaType = newMsg.mediaType
 
       contacts.value.splice(contactIndex, 1)
       contacts.value.unshift(contact)
