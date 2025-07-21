@@ -34,6 +34,7 @@ router.get('/contacts', async (req, res) => {
             name: contact.pushname || contact.name || contact.number || contactId,
             lastTimestamp: lastMessage?.timestamp ?? null,
             lastMessage: lastMessage?.body ?? null,
+            lastMediaType: lastMessage?.mediaType ?? null,
         });
     }
 
