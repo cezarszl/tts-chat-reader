@@ -77,13 +77,6 @@ export const signalReceive = (from: string): Promise<string> => {
     });
 };
 
-let isWarmingUp = true;
-
-setTimeout(() => {
-    isWarmingUp = false;
-    console.log('🔥 Signal TTS warmup finished');
-}, 5000);
-
 export const receiveMessages = async (from: string) => {
     try {
         const output = await signalReceive(from);
