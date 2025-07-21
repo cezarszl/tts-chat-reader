@@ -104,14 +104,20 @@ export const receiveMessages = async (from: string) => {
                 if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
 
                 // If the message is older than 10 seconds, skip TTS and just broadcast
-                if (isWarmingUp || Date.now() - message.timestamp > 10_000) {
+                console.log('Received message:', {
+                    timestamp: message.timestamp,
+                    now: Date.now(),
+                    diff: Date.now() - message.timestamp,
+                });
+                const isOld = Date.now() - message.timestamp > 10_000;
+                if (isOld) {
                     sessionMessages[contactId].push(message);
                     broadcastMessage({ contactId, ...message, source: 'signal' });
                     continue;
                 } else {
                     const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-                    const { audioId } = await speakText(announcement);
-                    const fullMsg = { ...message, audioId };
+                    // const { audioId } = await speakText(announcement);
+                    const fullMsg = { ...message };
                     sessionMessages[contactId].push(fullMsg);
 
                     broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
@@ -160,13 +166,19 @@ const parseBlock = (block: string) => {
     contactId = groupMatch ? groupMatch[1] + '=' : sender;
     displayName = groupMatch ? (groupNameMatch?.[1].trim() ?? 'Unknown Group') : displayName;
 
+    let rawTimestamp = timestampMatch ? Number(timestampMatch[1]) : Date.now();
+    if (rawTimestamp > 1e12) {
+        rawTimestamp = Math.floor(rawTimestamp / 1000);
+    }
+    const finalTimestamp = rawTimestamp < 1e12 ? rawTimestamp * 1000 : rawTimestamp;
+
     return {
         contactId,
         displayName,
         message: {
             from: sender,
             body: bodyMatch[1].trim(),
-            timestamp: timestampMatch ? Number(timestampMatch[1]) : Date.now(),
+            timestamp: finalTimestamp,
         },
     };
 };
