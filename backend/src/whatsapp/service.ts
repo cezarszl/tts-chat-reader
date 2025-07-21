@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
 import { speakText } from '../tts';
+import { SessionMessage } from '../types/SessionMessage';
 
 const historyPath = path.resolve(__dirname, 'whatsapp-history.json');
 
@@ -20,14 +21,7 @@ export const whatsappClient = new Client({
     },
 });
 
-type SessionMessage = {
-    from: string;
-    body: string;
-    timestamp: number;
-    mediaUrl?: string;
-    mediaType?: string;
-    audioId?: string;
-};
+
 
 export const sessionMessages: Record<string, SessionMessage[]> = {};
 
@@ -177,15 +171,9 @@ whatsappClient.on('auth_failure', msg => {
 });
 
 
-let isWarmingUp = true;
 
 whatsappClient.on('ready', async () => {
-
     console.log('✅ WhatsApp client is ready!');
-    setTimeout(() => {
-        isWarmingUp = false;
-        console.log('🔥 Warming up finished, TTS is enabled');
-    }, 5000);
 });
 
 
