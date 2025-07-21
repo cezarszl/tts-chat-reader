@@ -20,7 +20,16 @@ export const whatsappClient = new Client({
     },
 });
 
-export const sessionMessages: Record<string, { from: string, body: string, timestamp: number }[]> = {};
+type SessionMessage = {
+    from: string;
+    body: string;
+    timestamp: number;
+    mediaUrl?: string;
+    mediaType?: string;
+    audioId?: string;
+};
+
+export const sessionMessages: Record<string, SessionMessage[]> = {};
 
 if (fs.existsSync(historyPath)) {
     const file = fs.readFileSync(historyPath, 'utf-8');
@@ -39,43 +48,66 @@ const saveMessages = () => {
 
 
 whatsappClient.on('message', async (message) => {
-
     if (message.from === 'status@broadcast') {
         return;
     }
-    const contactId = message.fromMe ? message.to : message.from;
 
+    const contactId = message.fromMe ? message.to : message.from;
     const contact = await whatsappClient.getContactById(contactId);
 
-    const msg = {
+    const baseMsg = {
         from: message.fromMe ? 'me' : (contact.pushname || contact.name || contact.number || contactId),
-        rawFrom: contactId,
         body: message.body,
-        timestamp: Date.now(),
+        timestamp: message.timestamp * 1000,
     };
 
     if (!sessionMessages[contactId]) {
         sessionMessages[contactId] = [];
     }
 
+    let mediaUrl: string | undefined;
+    let mediaType: 'image' | 'video' | undefined;
 
-    // If the message is older than 10 seconds, skip TTS and just broadcast
-    if (Date.now() - msg.timestamp > 10_000) {
-        sessionMessages[contactId].push(msg);
-        broadcastMessage({ contactId, ...msg, source: 'whatsapp' });
-        return;
+    if (message.hasMedia) {
+        const media = await message.downloadMedia();
+        if (media) {
+            const mimeType = media.mimetype;
+            const extension = mimeType.split('/')[1];
+            const fileName = `media-${Date.now()}.${extension}`;
+            const filePath = path.resolve(__dirname, '../../uploads', fileName);
+            fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
+
+            mediaUrl = `/uploads/${fileName}`;
+            mediaType = mimeType.startsWith('image') ? 'image' : 'video';
+        }
+    }
+
+    const enrichedMsg: SessionMessage = {
+        ...baseMsg,
+        mediaUrl,
+        mediaType,
+    };
+
+    const isOld = Date.now() - enrichedMsg.timestamp > 10_000;
+
+    if (isOld) {
+        sessionMessages[contactId].push(enrichedMsg);
+        broadcastMessage({ contactId, ...enrichedMsg, source: 'whatsapp' });
     } else {
-        const senderName = contact.pushname || contact.name || contact.number || contactId;
-        const announcement = `Nowa wiadomość od ${senderName}. ${msg.body}`;
-        const { audioId } = await speakText(announcement);
-        const fullMsg = { ...msg, audioId };
-
+        let fullMsg = enrichedMsg;
+        if (baseMsg.body) {
+            const senderName = contact.pushname || contact.name || contact.number || contactId;
+            const announcement = `Nowa wiadomość od ${senderName}. ${baseMsg.body}`;
+            const { audioId } = await speakText(announcement);
+            fullMsg = { ...enrichedMsg, audioId };
+        }
         sessionMessages[contactId].push(fullMsg);
         broadcastMessage({ contactId, ...fullMsg, source: 'whatsapp' });
-
     }
+
     saveMessages();
 });
+
 
 
 whatsappClient.on('message_create', async (msg) => {
@@ -100,10 +132,10 @@ whatsappClient.on('message_create', async (msg) => {
 
         const type = mimeType.startsWith('image') ? 'image' : 'video';
 
-        const mediaMsg = {
+        const mediaMsg: SessionMessage = {
             from: 'me',
             body: msg.body,
-            timestamp: Date.now(),
+            timestamp: msg.timestamp * 1000,
             mediaUrl: `/uploads/${fileName}`,
             mediaType: type
         };
@@ -112,10 +144,10 @@ whatsappClient.on('message_create', async (msg) => {
         saveMessages();
         broadcastMessage({ contactId, ...mediaMsg, source: 'whatsapp' });
     } else {
-        const outgoing = {
+        const outgoing: SessionMessage = {
             from: 'me',
             body: msg.body,
-            timestamp: Date.now(),
+            timestamp: msg.timestamp * 1000,
         };
 
         sessionMessages[contactId].push(outgoing);
