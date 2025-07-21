@@ -377,7 +377,12 @@ onMounted(() => {
     if (contactIndex !== -1) {
       const contact = contacts.value[contactIndex]
 
-      contact.lastMessage = newMsg.body
+      contact.lastMessage =
+        newMsg.mediaType === 'image'
+          ? '📷 Zdjęcie'
+          : newMsg.mediaType === 'video'
+            ? '🎬 Wideo'
+            : newMsg.body
       contact.lastTimestamp = newMsg.timestamp
       contact.lastMediaType = newMsg.mediaType
 
