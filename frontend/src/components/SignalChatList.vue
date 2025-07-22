@@ -395,9 +395,13 @@ onMounted(() => {
 
       contact.lastMessage =
         newMsg.mediaType === 'image'
-          ? '📷 Zdjęcie'
+          ? newMsg.body
+            ? `🖼 ${newMsg.body}`
+            : '🖼 Zdjęcie'
           : newMsg.mediaType === 'video'
-            ? '🎬 Wideo'
+            ? newMsg.body
+              ? `🎬 ${newMsg.body}`
+              : '🎬 Wideo'
             : newMsg.body
       contact.lastTimestamp = newMsg.timestamp
       contact.lastMediaType = newMsg.mediaType
