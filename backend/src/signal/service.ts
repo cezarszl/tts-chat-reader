@@ -5,6 +5,9 @@ import { broadcastMessage } from '../ws';
 import { speakText } from '../tts';
 import { SessionMessage } from '../types/SessionMessage';
 
+import util from 'util';
+
+const execAsync = util.promisify(exec);
 const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/signal-cli';
 const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
 const historyPath = path.resolve(__dirname, 'signal-history.json');
@@ -217,5 +220,9 @@ export const checkSignalReady = () => {
     });
 };
 
+export const sendSignalMediaMessage = async ({ from, to, filePath }: { from: string, to: string, filePath: string }) => {
+    const cmd = `signal-cli -u ${from} send -a "${filePath}" ${to}`;
+    await execAsync(cmd)
+}
 
 
