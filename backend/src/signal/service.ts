@@ -106,8 +106,9 @@ export const receiveMessages = async (from: string) => {
                     continue;
                 } else {
                     const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-                    const { audioId } = await speakText(announcement);
-                    const fullMsg: SessionMessage = { ...message, audioId };
+                    // const { audioId } = await speakText(announcement);
+                    // const fullMsg: SessionMessage = { ...message, audioId };
+                    const fullMsg: SessionMessage = { ...message };
                     sessionMessages[contactId].push(fullMsg);
 
                     broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
@@ -131,6 +132,33 @@ const parseBlock = (block: string): {
     displayName: string;
     message: SessionMessage;
 } | null => {
+    console.log(block)
+
+
+
+    const storedPathMatch = block.match(/Stored plaintext in:\s+(.+\.jpg|.+\.jpeg|.+\.png|.+\.mp4)/i);
+
+    let mediaUrl: string | undefined;
+    let mediaType: 'image' | 'video' | undefined;
+
+    if (storedPathMatch) {
+        const tempPath = storedPathMatch[1].trim();
+        const extension = path.extname(tempPath).toLowerCase();
+
+        const fileName = `media-${Date.now()}${extension}`;
+        const finalPath = path.resolve(__dirname, '../../uploads', fileName);
+
+        try {
+            fs.copyFileSync(tempPath, finalPath);
+
+            mediaUrl = `/uploads/${fileName}`;
+            mediaType = extension.includes('mp4') ? 'video' : 'image';
+        } catch (err) {
+            console.error('❌ Failed to copy media file from Signal:', err);
+        }
+    }
+
+
     const bodyMatch = block.match(/^\s*Body:\s+([\s\S]*?)(?:\n|$)/m);
     const timestampMatch = block.match(/Message timestamp:\s+(\d+)/) || block.match(/Timestamp:\s+(\d+)/);
     const groupMatch = block.match(/Group info:[\s\S]*?Id:\s+(.+)=/m);
@@ -173,6 +201,8 @@ const parseBlock = (block: string): {
             from: sender,
             body: bodyMatch[1].trim(),
             timestamp: finalTimestamp,
+            mediaUrl,
+            mediaType,
         },
     };
 };
