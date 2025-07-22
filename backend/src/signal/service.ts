@@ -136,7 +136,7 @@ const parseBlock = (block: string): {
     const groupMatch = block.match(/Group info:[\s\S]*?Id:\s+(.+)=/m);
     const groupNameMatch = block.match(/Group info:[\s\S]*?Name:\s+(.+)/m);
     let contactId: string | null = null;
-    let displayName: string | null = null;
+    let displayName: string = 'Unknown';
     let sender: string | null = null;
 
     if (!bodyMatch) return null;
