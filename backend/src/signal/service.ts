@@ -132,17 +132,15 @@ const parseBlock = (block: string): {
     displayName: string;
     message: SessionMessage;
 } | null => {
-    console.log(block)
 
 
-
-    const storedPathMatch = block.match(/Stored plaintext in:\s+(.+\.jpg|.+\.jpeg|.+\.png|.+\.mp4)/i);
+    const attachmentMatch = block.match(/Stored plaintext in:\s+(.+\.jpg|.+\.jpeg|.+\.png|.+\.mp4)/i);
 
     let mediaUrl: string | undefined;
     let mediaType: 'image' | 'video' | undefined;
 
-    if (storedPathMatch) {
-        const tempPath = storedPathMatch[1].trim();
+    if (attachmentMatch) {
+        const tempPath = attachmentMatch[1].trim();
         const extension = path.extname(tempPath).toLowerCase();
 
         const fileName = `media-${Date.now()}${extension}`;
@@ -167,7 +165,7 @@ const parseBlock = (block: string): {
     let displayName: string = 'Unknown';
     let sender: string | null = null;
 
-    if (!bodyMatch) return null;
+    if (!bodyMatch && !attachmentMatch) return null;
 
     if (block.includes('Received sync sent message')) {
         const toMatch = block.match(/^\s*To:\s+["“”]?(.+?)["“”]?\s+(\+[\d]+)/m);
@@ -199,7 +197,7 @@ const parseBlock = (block: string): {
         displayName,
         message: {
             from: sender,
-            body: bodyMatch[1].trim(),
+            body: bodyMatch?.[1]?.trim() ?? '',
             timestamp: finalTimestamp,
             mediaUrl,
             mediaType,
