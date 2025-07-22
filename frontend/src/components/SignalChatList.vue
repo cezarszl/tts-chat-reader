@@ -101,6 +101,17 @@
                 class="absolute -left-1 bottom-0 w-0 h-0 border-r-8 border-r-white border-t-8 border-t-transparent"
               ></div>
 
+              <div v-if="msg.mediaUrl">
+                <img
+                  v-if="msg.mediaType === 'image'"
+                  :src="baseUrl + msg.mediaUrl"
+                  class="max-w-xs rounded"
+                  @load="scrollToBottom"
+                />
+                <video v-else controls class="max-w-xs rounded" @loadedmetadata="scrollToBottom">
+                  <source :src="baseUrl + msg.mediaUrl" />
+                </video>
+              </div>
               <p class="text-sm leading-relaxed">
                 {{ msg.body }}
                 <button
@@ -212,6 +223,7 @@ type Contact = {
   name: string
   lastTimestamp: number | null
   lastMessage: string | null
+  lastMediaType: string | null
 }
 
 const contacts = ref<Contact[]>([])
@@ -241,8 +253,25 @@ const addEmoji = (emoji: any) => {
 }
 
 /* Messages */
-const messages = ref<{ from: string; body: string; timestamp: number; audioId: string }[]>([])
+interface Message {
+  from: string
+  body: string
+  timestamp: number
+  mediaUrl?: string
+  audioId?: string
+  mediaType?: string
+}
+
+const messages = ref<Message[]>([])
 const messageContainer = ref<HTMLElement | null>(null)
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  })
+}
 
 watch(
   messages,
@@ -338,7 +367,7 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
-
+    console.log('[WS IN]', data)
     if (data.source !== 'signal') return
 
     const newMsg = {
@@ -346,6 +375,8 @@ onMounted(() => {
       body: data.body,
       timestamp: data.timestamp,
       audioId: data.audioId,
+      mediaUrl: data.mediaUrl,
+      mediaType: data.mediaType,
     }
     if (newMsg.audioId) {
       const audio = new Audio(`${baseUrl}/api/tts/${newMsg.audioId}`)
@@ -362,8 +393,14 @@ onMounted(() => {
     if (contactIndex !== -1) {
       const contact = contacts.value[contactIndex]
 
-      contact.lastMessage = newMsg.body
+      contact.lastMessage =
+        newMsg.mediaType === 'image'
+          ? '📷 Zdjęcie'
+          : newMsg.mediaType === 'video'
+            ? '🎬 Wideo'
+            : newMsg.body
       contact.lastTimestamp = newMsg.timestamp
+      contact.lastMediaType = newMsg.mediaType
 
       contacts.value.splice(contactIndex, 1)
       contacts.value.unshift(contact)
@@ -373,6 +410,7 @@ onMounted(() => {
         name: data.contactId,
         lastMessage: newMsg.body,
         lastTimestamp: newMsg.timestamp,
+        lastMediaType: newMsg.mediaType,
       })
     }
   }
