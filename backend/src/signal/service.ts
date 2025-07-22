@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
 import { speakText } from '../tts';
+import { SessionMessage } from '../types/SessionMessage';
 
 const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/signal-cli';
 const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
@@ -13,7 +14,7 @@ const namesPath = path.resolve(__dirname, 'signal-names.json');
 
 export const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 
-export const sessionMessages: Record<string, { from: string; body: string; timestamp: number }[]> = {};
+export const sessionMessages: Record<string, SessionMessage[]> = {};
 export let knownNames: Record<string, string> = {}
 
 if (fs.existsSync(historyPath)) {
@@ -97,11 +98,7 @@ export const receiveMessages = async (from: string) => {
                 if (!sessionMessages[contactId]) sessionMessages[contactId] = [];
 
                 // If the message is older than 10 seconds, skip TTS and just broadcast
-                console.log('Received message:', {
-                    timestamp: message.timestamp,
-                    now: Date.now(),
-                    diff: Date.now() - message.timestamp,
-                });
+
                 const isOld = Date.now() - message.timestamp > 10_000;
                 if (isOld) {
                     sessionMessages[contactId].push(message);
@@ -109,8 +106,8 @@ export const receiveMessages = async (from: string) => {
                     continue;
                 } else {
                     const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-                    // const { audioId } = await speakText(announcement);
-                    const fullMsg = { ...message };
+                    const { audioId } = await speakText(announcement);
+                    const fullMsg: SessionMessage = { ...message, audioId };
                     sessionMessages[contactId].push(fullMsg);
 
                     broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
@@ -129,7 +126,11 @@ export const receiveMessages = async (from: string) => {
 };
 
 
-const parseBlock = (block: string) => {
+const parseBlock = (block: string): {
+    contactId: string;
+    displayName: string;
+    message: SessionMessage;
+} | null => {
     const bodyMatch = block.match(/^\s*Body:\s+([\s\S]*?)(?:\n|$)/m);
     const timestampMatch = block.match(/Message timestamp:\s+(\d+)/) || block.match(/Timestamp:\s+(\d+)/);
     const groupMatch = block.match(/Group info:[\s\S]*?Id:\s+(.+)=/m);
