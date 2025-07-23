@@ -145,11 +145,12 @@
                 class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
                 rows="1"
               />
+              <InputFileUpload class="absolute right-3 top-3" @file-selected="uploadMedia" />
               <!-- Emoji toggle button -->
               <button
                 type="button"
                 @click.stop="toggleEmojiPicker"
-                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                class="cursor-pointer absolute right-12 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
                 😀
               </button>
@@ -215,6 +216,7 @@ import { ref, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
 import emojiData from 'emoji-mart-vue-fast/data/all.json'
 import 'emoji-mart-vue-fast/css/emoji-mart.css'
+import InputFileUpload from './InputFileUpload.vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -358,6 +360,21 @@ const sendMessage = async () => {
   }
 }
 
+const uploadMedia = async (file: File) => {
+  if (!file || !selectedContact.value) return
+
+  const formData = new FormData()
+  formData.append('to', selectedContact.value)
+  formData.append('from', myNumber.value)
+  formData.append('file', file)
+
+  console.log('[MediaUpload] Sending:', file)
+
+  await fetch(`${baseUrl}/api/signal/send-media`, {
+    method: 'POST',
+    body: formData,
+  })
+}
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 
