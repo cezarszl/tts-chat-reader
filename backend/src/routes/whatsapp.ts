@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { whatsappClient, qrCodeBase64, isAuthenticated, sessionMessages } from '../whatsapp';
+import upload from '../middleware/upload';
+import { MessageMedia } from 'whatsapp-web.js';
 
 
 
@@ -67,5 +69,22 @@ router.post('/send', async (req, res) => {
     }
 });
 
+router.post('/send-media', upload.single('file'), async (req, res) => {
+    const { to } = req.body;
+    const filePath = req.file?.path;
 
+    if (!to || !filePath) {
+        return res.status(400).json({ error: 'Missing recipient or file' });
+    }
+
+    try {
+        const media = MessageMedia.fromFilePath(filePath);
+        await whatsappClient.sendMessage(to, media, { sendMediaAsDocument: true });
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[WhatsApp SEND-MEDIA error]', err);
+        res.status(500).json({ error: 'Failed to send media' });
+    }
+});
 export default router;
