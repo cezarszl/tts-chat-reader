@@ -221,8 +221,30 @@ export const checkSignalReady = () => {
 };
 
 export const sendSignalMediaMessage = async ({ from, to, filePath }: { from: string, to: string, filePath: string }) => {
-    const cmd = `signal-cli -u ${from} send -a "${filePath}" ${to}`;
+    console.log(`${from} ${to}`)
+    const cmd = `signal-cli -u ${from} send ${to} -a "${filePath}"`;
     await execAsync(cmd)
+
+    const isImage = filePath.match(/\.(jpg|jpeg|png)$/i);
+    const isVideo = filePath.match(/\.(mp4|mov|webm)$/i);
+
+    const mediaType = isImage ? 'image' : isVideo ? 'video' : undefined;
+    const mediaUrl = `/uploads/${path.basename(filePath)}`;
+
+    const msg = {
+        from: 'me',
+        body: '',
+        timestamp: Date.now(),
+        mediaUrl,
+        mediaType,
+    };
+
+    if (!sessionMessages[to]) sessionMessages[to] = [];
+    sessionMessages[to].push(msg);
+    saveMessages();
+
+    broadcastMessage({ contactId: to, ...msg, source: 'signal' });
 }
+
 
 
