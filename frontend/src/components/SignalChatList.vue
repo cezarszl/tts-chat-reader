@@ -382,7 +382,6 @@ onMounted(() => {
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    console.log('[WS IN]', data)
     if (data.source !== 'signal') return
 
     const newMsg = {
