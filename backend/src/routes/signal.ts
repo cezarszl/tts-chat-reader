@@ -1,6 +1,19 @@
 import { Router } from 'express';
-import { signalSend, sessionMessages, knownNames, MY_NUMBER } from '../signal';
+import { signalSend, sessionMessages, knownNames, MY_NUMBER, sendSignalMediaMessage } from '../signal';
+import path from 'path';
+import crypto from 'crypto';
+import multer from 'multer';
 
+const storage = multer.diskStorage({
+    destination: 'uploads/',
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const name = crypto.randomBytes(16).toString('hex');
+        cb(null, name + ext);
+    },
+});
+
+const upload = multer({ storage });
 const router = Router();
 
 router.post('/send', async (req, res) => {
@@ -41,6 +54,35 @@ router.get('/contacts', async (req, res) => {
     });
 
     res.json(contacts);
+});
+
+router.post('/send-media', upload.single('file'), async (req, res) => {
+    const { to, from } = req.body;
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const filePath = req.file.path;
+
+    try {
+        const isImage = req.file.mimetype.startsWith('image/');
+        const isVideo = req.file.mimetype.startsWith('video/');
+
+        if (!isImage && !isVideo) {
+            return res.status(400).json({ error: 'Only image and video supported' });
+        }
+
+        await sendSignalMediaMessage({
+            from,
+            to,
+            filePath,
+        });
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Failed to send media', err);
+        res.status(500).json({ error: 'Internal error' });
+    }
 });
 
 
