@@ -1,19 +1,8 @@
 import { Router } from 'express';
 import { signalSend, sessionMessages, knownNames, MY_NUMBER, sendSignalMediaMessage } from '../signal';
-import path from 'path';
-import crypto from 'crypto';
-import multer from 'multer';
+import upload from '../middleware/upload'
 
-const storage = multer.diskStorage({
-    destination: 'uploads/',
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        const name = crypto.randomBytes(16).toString('hex');
-        cb(null, name + ext);
-    },
-});
 
-const upload = multer({ storage });
 const router = Router();
 
 router.post('/send', async (req, res) => {
