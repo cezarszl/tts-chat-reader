@@ -368,8 +368,6 @@ const uploadMedia = async (file: File) => {
   formData.append('from', myNumber.value)
   formData.append('file', file)
 
-  console.log('[MediaUpload] Sending:', file)
-
   await fetch(`${baseUrl}/api/signal/send-media`, {
     method: 'POST',
     body: formData,
