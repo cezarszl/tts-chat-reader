@@ -1,7 +1,7 @@
 <template>
   <label
     for="file-upload"
-    class="cursor-pointer text-blue-600 hover:text-blue-800 transition font-medium"
+    class="cursor-pointer text-black-600 hover:text-black-800 transition font-medium"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -28,8 +28,18 @@ const emit = defineEmits<{
 }>()
 
 const handleFileUpload = (event: Event) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm']
+
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  if (file) emit('file-selected', file)
+
+  if (!file) return
+
+  if (!allowedTypes.includes(file.type)) {
+    alert(`This format is not supported: ${file.type}`)
+    return
+  }
+
+  emit('file-selected', file)
 }
 </script>
