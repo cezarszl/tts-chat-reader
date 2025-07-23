@@ -221,7 +221,6 @@ export const checkSignalReady = () => {
 };
 
 export const sendSignalMediaMessage = async ({ from, to, filePath }: { from: string, to: string, filePath: string }) => {
-    console.log(`${from} ${to}`)
     const cmd = `signal-cli -u ${from} send ${to} -a "${filePath}"`;
     await execAsync(cmd)
 
