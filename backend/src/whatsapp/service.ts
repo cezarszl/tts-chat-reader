@@ -93,7 +93,8 @@ whatsappClient.on('message', async (message) => {
             const senderName = contact.pushname || contact.name || contact.number || contactId;
             const announcement = `Nowa wiadomość od ${senderName}. ${baseMsg.body}`;
             const { audioId } = await speakText(announcement);
-            fullMsg = { ...enrichedMsg, audioId };
+            // fullMsg = { ...enrichedMsg, audioId };
+            fullMsg = { ...enrichedMsg };
         }
         sessionMessages[contactId].push(fullMsg);
         broadcastMessage({ contactId, ...fullMsg, source: 'whatsapp' });
