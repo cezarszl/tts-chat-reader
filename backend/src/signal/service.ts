@@ -8,7 +8,7 @@ import { SessionMessage } from '../types/SessionMessage';
 import util from 'util';
 
 const execAsync = util.promisify(exec);
-const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/signal-cli';
+const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/bin/signal-cli';
 const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
 const historyPath = path.resolve(__dirname, 'signal-history.json');
 const namesPath = path.resolve(__dirname, 'signal-names.json');
@@ -109,9 +109,8 @@ export const receiveMessages = async (from: string) => {
                     continue;
                 } else {
                     const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
-                    // const { audioId } = await speakText(announcement);
-                    // const fullMsg: SessionMessage = { ...message, audioId };
-                    const fullMsg: SessionMessage = { ...message };
+                    const { audioId } = await speakText(announcement);
+                    const fullMsg: SessionMessage = { ...message, audioId };
                     sessionMessages[contactId].push(fullMsg);
 
                     broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
