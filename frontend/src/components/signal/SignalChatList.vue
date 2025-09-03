@@ -216,7 +216,7 @@ import { ref, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Picker, EmojiIndex } from 'emoji-mart-vue-fast/src'
 import emojiData from 'emoji-mart-vue-fast/data/all.json'
 import 'emoji-mart-vue-fast/css/emoji-mart.css'
-import InputFileUpload from './InputFileUpload.vue'
+import InputFileUpload from '../InputFileUpload.vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 

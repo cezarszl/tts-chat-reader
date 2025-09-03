@@ -51,8 +51,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import SignalChatList from './components/SignalChatList.vue'
-import WhatsAppChatPage from './components/WhatsAppPage.vue'
+import SignalChatList from './components/signal/SignalChatList.vue'
+import WhatsAppChatPage from './components/whatsapp/WhatsAppPage.vue'
 
 const activeTab = ref<'signal' | 'whatsapp'>('whatsapp')
 </script>
