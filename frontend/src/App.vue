@@ -43,7 +43,7 @@
       </div>
 
       <!-- Chat view -->
-      <SignalChatList v-if="activeTab === 'signal'" />
+      <SignalPage v-if="activeTab === 'signal'" />
       <WhatsAppChatPage v-else />
     </div>
   </div>
@@ -51,8 +51,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import SignalChatList from './components/signal/SignalChatList.vue'
 import WhatsAppChatPage from './components/whatsapp/WhatsAppPage.vue'
+import SignalPage from './components/signal/SignalPage.vue'
 
 const activeTab = ref<'signal' | 'whatsapp'>('whatsapp')
 </script>
