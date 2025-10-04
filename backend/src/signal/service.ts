@@ -1,10 +1,11 @@
-import { exec } from 'child_process';
+import { exec, spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { broadcastMessage } from '../ws';
 import { speakText } from '../tts';
 import { SessionMessage } from '../types/SessionMessage';
-
+import { LinkState } from '../types/LinkState';
+import QRCode from 'qrcode';
 import util from 'util';
 
 const execAsync = util.promisify(exec);
@@ -13,12 +14,91 @@ const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
 const historyPath = path.resolve(__dirname, 'signal-history.json');
 const namesPath = path.resolve(__dirname, 'signal-names.json');
 
-
-
 export const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
-
 export const sessionMessages: Record<string, SessionMessage[]> = {};
 export let knownNames: Record<string, string> = {}
+const state: LinkState = {
+    child: undefined,
+    qrDataUrl: null,
+    startedAt: undefined,
+    completed: false,
+    timeout: undefined,
+};
+
+export async function isSignalLinked(): Promise<boolean> {
+    if (!MY_NUMBER) return false;
+    try {
+        await execAsync(`${SIGNAL_CLI_PATH} --config ${CONFIG_DIR} -a ${MY_NUMBER} listDevices`);
+        console.log('SIGNAL')
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function startSignalLink(deviceName = 'MyChatReader', timeoutMs = 3 * 60 * 1000): void {
+    if (state.child && !state.completed) return; // już trwa
+
+    cancelSignalLink();
+
+    const child = spawn(SIGNAL_CLI_PATH, ['--config', CONFIG_DIR, 'link', '-n', deviceName]);
+    state.child = child;
+    state.startedAt = Date.now();
+    state.completed = false;
+
+    let buffer = '';
+
+    child.stdout.on('data', async (chunk) => {
+        buffer += chunk.toString();
+        const nl = buffer.indexOf('\n');
+
+        if (nl !== -1 && !state.qrDataUrl) {
+            const firstLine = buffer.slice(0, nl).trim();
+            if (firstLine.startsWith('sgnl://')) {
+                state.qrDataUrl = await QRCode.toDataURL(firstLine, { width: 360, margin: 1 });
+                state.timeout = setTimeout(() => {
+                    cancelSignalLink();
+                }, timeoutMs);
+            }
+        }
+    });
+    child.stderr.on('data', () => { /* opcjonalnie log */ });
+
+    child.on('close', async () => {
+        if (state.timeout) clearTimeout(state.timeout);
+
+        if (await isSignalLinked()) {
+            state.completed = true;
+            state.qrDataUrl = null;
+        } else {
+            state.completed = false;
+        }
+
+        state.child = undefined;
+        state.startedAt = undefined;
+        state.timeout = undefined;
+    });
+}
+
+export function getSignalQrBase64(): string | null {
+    return state.qrDataUrl ?? null;
+}
+
+export function isLinkingInProgress(): boolean {
+    return !!state.child && !state.completed;
+}
+export function cancelSignalLink(): void {
+    if (state.timeout) clearTimeout(state.timeout);
+    state.timeout = undefined;
+
+    try { state.child?.kill('SIGINT'); } catch { }
+    state.child = undefined;
+
+    state.qrDataUrl = null;
+    state.startedAt = undefined;
+    state.completed = false;
+}
+
 
 if (fs.existsSync(historyPath)) {
     const file = fs.readFileSync(historyPath, 'utf-8');

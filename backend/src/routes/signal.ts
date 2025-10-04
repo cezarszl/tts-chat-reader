@@ -1,9 +1,42 @@
 import { Router } from 'express';
-import { signalSend, sessionMessages, knownNames, MY_NUMBER, sendSignalMediaMessage } from '../signal';
+import {
+    signalSend, sessionMessages, knownNames, MY_NUMBER, sendSignalMediaMessage, startSignalLink,
+    getSignalQrBase64,
+    isSignalLinked,
+    isLinkingInProgress,
+    cancelSignalLink,
+} from '../signal';
 import upload from '../middleware/upload'
 
 
 const router = Router();
+
+router.post('/auth/start', async (_req, res) => {
+    if (await isSignalLinked()) {
+        return res.status(200).json({ ok: true, alreadyLinked: true });
+    }
+    if (!isLinkingInProgress()) startSignalLink();
+    return res.status(202).json({ ok: true });
+});
+
+router.get('/auth/qr', async (_req, res) => {
+    if (await isSignalLinked()) {
+        return res.status(200).json({ qr: false });
+    }
+    const qr = getSignalQrBase64();
+    if (qr) return res.status(200).json({ qr });
+    return res.status(404).json({ error: 'QR code not ready' });
+});
+
+router.post('/auth/cancel', (_req, res) => {
+    cancelSignalLink();
+    return res.json({ ok: true });
+});
+
+router.get('/session', async (_req, res) => {
+    const linked = await isSignalLinked();
+    return res.json({ authenticated: linked });
+});
 
 router.post('/send', async (req, res) => {
     const { to, message } = req.body;
