@@ -7,7 +7,7 @@ import path from 'path';
 import './whatsapp';
 import { setupWebSocket } from './ws';
 import { createServer } from 'http';
-import { receiveMessages, checkSignalReady } from './signal/';
+import { receiveMessages, checkSignalReady, isSignalLinked } from './signal/';
 import fs from 'fs';
 
 
@@ -39,10 +39,25 @@ server.listen(port, () => {
 
 checkSignalReady();
 
+let receiveInFlight = false;
+let lastErrorAt = 0;
+
 setInterval(async () => {
+    if (receiveInFlight) return;
+
+    // mały backoff po błędzie (np. 2s)
+    if (Date.now() - lastErrorAt < 2000) return;
+
     try {
+        const linked = await isSignalLinked();
+        if (!linked) return; // nie próbuj receive jeśli nie zalinkowane
+
+        receiveInFlight = true;
         await receiveMessages(SIGNAL_NUMBER);
-    } catch (err) {
-        console.error('❌ Error in periodic Signal receive:', err);
+    } catch (e) {
+        lastErrorAt = Date.now();
+        console.error('❌ Error in periodic Signal receive:', (e as any)?.toString?.() || e);
+    } finally {
+        receiveInFlight = false;
     }
 }, 5000);
