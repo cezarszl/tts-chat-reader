@@ -1,22 +1,45 @@
-version: "3.9"
-
 services:
   backend:
-    build: ./backend
-    volumes: 
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chat-reader-backend
+    env_file: .env
+    environment:
+      SIGNAL_CONFIG_DIR: /signal-data
+      SIGNAL_CLI_PATH: signal-cli
+      UPLOADS_DIR: /uploads
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      TMPDIR: /var/tmp
+      JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=/var/tmp
+    volumes:
       - ./backend/messages.json:/app/messages.json
       - ./messages:/app/messages
-       ./whatsapp-session:/home/node/.wwebjs_auth
+
+      # Signal sesja
+      - ./signal-data:/signal-data
+
+      # WhatsApp sesja + cache
+      - ./whatsapp-session:/app/.wwebjs_auth
+      - ./whatsapp-cache:/app/.wwebjs_cache
+
+      # Uploady
+      - ./uploads:/uploads
     ports:
-     - "${BACKEND_PORT}:3000"
-    env_file: .env
+      - "${BACKEND_PORT}:3000"
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
-    volumes: 
-      - ./frontend:/app/
-    ports: 
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chat-reader-frontend
+    volumes:
+      # dev-mode: bind mount całego katalogu projektu do /app (nadpisze COPY z Dockerfile)
+      - ./frontend:/app
+    ports:
       - "${FRONTEND_PORT}:5173"
     depends_on:
       - backend
     command: npm run dev -- --host
+    restart: unless-stopped
