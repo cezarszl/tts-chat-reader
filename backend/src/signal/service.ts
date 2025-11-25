@@ -9,8 +9,8 @@ import QRCode from 'qrcode';
 import util from 'util';
 
 const execAsync = util.promisify(exec);
-const SIGNAL_CLI_PATH = '/home/cezarszl/apps/signal-cli/bin/signal-cli';
-const CONFIG_DIR = '/home/cezarszl/.local/share/signal-cli';
+const SIGNAL_CLI_PATH = process.env.SIGNAL_CLI_PATH || 'signal-cli';
+const CONFIG_DIR = process.env.SIGNAL_CONFIG_DIR || '/signal-data';
 const historyPath = path.resolve(__dirname, 'signal-history.json');
 const namesPath = path.resolve(__dirname, 'signal-names.json');
 
@@ -226,7 +226,8 @@ const parseBlock = (block: string): {
         const extension = path.extname(tempPath).toLowerCase();
 
         const fileName = `media-${Date.now()}${extension}`;
-        const finalPath = path.resolve(__dirname, '../../uploads', fileName);
+        const uploadsDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
+        const finalPath = path.resolve(uploadsDir, fileName);
 
         try {
             fs.copyFileSync(tempPath, finalPath);

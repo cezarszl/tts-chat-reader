@@ -120,7 +120,8 @@ whatsappClient.on('message_create', async (msg) => {
         const mimeType = media.mimetype;
         const extension = mimeType.split('/')[1];
         const fileName = `media-${Date.now()}.${extension}`;
-        const filePath = path.resolve(__dirname, '../../uploads', fileName);
+        const uploadsDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
+        const filePath = path.resolve(uploadsDir, fileName);
 
         fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
 
