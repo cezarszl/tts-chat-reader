@@ -18,7 +18,7 @@ const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 export const SIGNAL_NUMBER = MY_NUMBER;
 
 
-const uploadDir = path.resolve(__dirname, '../uploads');
+const uploadDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
