@@ -6,18 +6,24 @@ import { broadcastMessage } from '../ws';
 import { speakText } from '../tts';
 import { SessionMessage } from '../types/SessionMessage';
 
-const historyPath = path.resolve(__dirname, 'whatsapp-history.json');
+import { MESSAGES_DIR, WHATSAPP_AUTH_DIR, WHATSAPP_CACHE_DIR, UPLOADS_DIR } from "../config/paths";
+
+const historyPath = path.join(MESSAGES_DIR, 'whatsapp-history.json');
 
 export let qrCodeBase64 = '';
 export let isAuthenticated = false;
 
 export const whatsappClient = new Client({
     authStrategy: new LocalAuth({
-        dataPath: './.wwebjs_auth'
+        dataPath: WHATSAPP_AUTH_DIR,
     }),
     puppeteer: {
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    },
+    webVersionCache: {
+        type: 'local',
+        path: WHATSAPP_CACHE_DIR,
     },
 });
 
@@ -68,11 +74,13 @@ whatsappClient.on('message', async (message) => {
             const mimeType = media.mimetype;
             const extension = mimeType.split('/')[1];
             const fileName = `media-${Date.now()}.${extension}`;
-            const filePath = path.resolve(__dirname, '../../uploads', fileName);
+            const filePath = path.join(UPLOADS_DIR, fileName);
             fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
 
             mediaUrl = `/uploads/${fileName}`;
-            mediaType = mimeType.startsWith('image') ? 'image' : 'video';
+            if (mimeType.startsWith('image/')) mediaType = 'image';
+            else if (mimeType.startsWith('video/')) mediaType = 'video';
+            else mediaType = undefined;
         }
     }
 
@@ -120,8 +128,7 @@ whatsappClient.on('message_create', async (msg) => {
         const mimeType = media.mimetype;
         const extension = mimeType.split('/')[1];
         const fileName = `media-${Date.now()}.${extension}`;
-        const uploadsDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
-        const filePath = path.resolve(uploadsDir, fileName);
+        const filePath = path.resolve(UPLOADS_DIR, fileName);
 
         fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
 
