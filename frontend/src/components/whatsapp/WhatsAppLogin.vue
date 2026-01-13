@@ -46,7 +46,6 @@ function pollQr() {
       if (res.status === 200) {
         const data = await res.json()
         if (data.qr === false) {
-          // już zalogowany
           cleanup()
           emit('authenticated')
           return
@@ -56,7 +55,6 @@ function pollQr() {
           loading.value = false
         }
       }
-      // 404 => QR jeszcze niegotowy – czekamy
     } catch (e) {
       console.error('WhatsApp QR poll error', e)
     }
