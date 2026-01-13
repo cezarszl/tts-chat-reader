@@ -3,11 +3,14 @@ import axios from 'axios';
 import { v4 as uuid } from 'uuid';
 import path from 'path';
 
+import { TTS_AUDIO_DIR } from "../config/paths";
+
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID!;
-const OUTPUT_DIR = path.resolve(__dirname, 'audio');
+const OUTPUT_DIR = TTS_AUDIO_DIR;
 
-export const speakText = async (text: string): Promise<{ audioId: string; path: string }> => {
+
+export const speakText = async (text: string): Promise<{ audioId: string; audioUrl: string }> => {
     const filename = `${uuid()}.mp3`;
     const filePath = path.join(OUTPUT_DIR, filename);
 
@@ -32,7 +35,7 @@ export const speakText = async (text: string): Promise<{ audioId: string; path: 
     response.data.pipe(writer);
 
     return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve({ audioId: filename.replace('.mp3', ''), path: filePath }));
+        writer.on('finish', () => resolve({ audioId: filename.replace('.mp3', ''), audioUrl: `/tts/audio/${filename}` }));
         writer.on('error', reject);
     });
 };
