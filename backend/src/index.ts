@@ -1,14 +1,13 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import routes from './routes';
-import path from 'path';
 import './whatsapp';
 import { setupWebSocket } from './ws';
 import { createServer } from 'http';
 import { receiveMessages, checkSignalReady, isSignalLinked } from './signal/';
-import fs from 'fs';
+
+import { UPLOADS_DIR, ensureDirs } from "./config/paths";
+
 
 
 const baseUrl = process.env.API_BASE_URL;
@@ -17,18 +16,14 @@ const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 
 export const SIGNAL_NUMBER = MY_NUMBER;
 
-
-const uploadDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
-
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use('/api', routes);
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+ensureDirs();
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 const server = createServer(app);
 setupWebSocket(server);
