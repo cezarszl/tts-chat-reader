@@ -141,24 +141,55 @@ export const saveNames = () => {
 
 export const signalSend = (from: string, to: string, message: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const cmd = `${SIGNAL_CLI_PATH} --config ${CONFIG_DIR} -a ${from} send -m "${message}" ${to}`;
-        exec(cmd, (err, stdout, stderr) => {
-            if (err) {
-                console.error('[Signal SEND error]', stderr);
-                reject(stderr.toString());
-            } else {
-                const msg = {
-                    from: 'me',
-                    body: message,
-                    timestamp: Date.now(),
-                };
+        const args = [
+            "--config",
+            CONFIG_DIR,
+            "-a",
+            from,
+            "send",
+            "-m",
+            message,
+            to,
+        ];
 
-                if (!sessionMessages[to]) sessionMessages[to] = [];
-                sessionMessages[to].push(msg);
-                saveMessages();
-                broadcastMessage({ contactId: to, ...msg, source: 'signal' });
-                resolve(stdout.toString().trim());
+        const child = spawn(SIGNAL_CLI_PATH, args, {
+            shell: false,
+            env: {
+                ...process.env,
+                LANG: "C.UTF-8",
+                LC_ALL: "C.UTF-8",
+            },
+        });
+
+        let stdout = "";
+        let stderr = "";
+
+        child.stdout.on("data", (d) => (stdout += d.toString("utf8")));
+        child.stderr.on("data", (d) => (stderr += d.toString("utf8")));
+
+        child.on("error", (err) => {
+            console.error("[Signal SEND spawn error]", err);
+            reject(String(err));
+        });
+
+        child.on("close", (code) => {
+            if (code !== 0) {
+                console.error("[Signal SEND error]", stderr);
+                return reject(stderr || `signal-cli exited with code ${code}`);
             }
+
+            const msg = {
+                from: "me",
+                body: message,
+                timestamp: Date.now(),
+            };
+
+            if (!sessionMessages[to]) sessionMessages[to] = [];
+            sessionMessages[to].push(msg);
+            saveMessages();
+            broadcastMessage({ contactId: to, ...msg, source: "signal" });
+
+            resolve(stdout.trim());
         });
     });
 };
