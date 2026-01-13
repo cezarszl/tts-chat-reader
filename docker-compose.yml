@@ -6,25 +6,17 @@ services:
     container_name: chat-reader-backend
     env_file: .env
     environment:
-      SIGNAL_CONFIG_DIR: /signal-data
       SIGNAL_CLI_PATH: signal-cli
-      UPLOADS_DIR: /uploads
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       TMPDIR: /var/tmp
       JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=/var/tmp
     volumes:
-      - ./backend/messages.json:/app/messages.json
-      - ./messages:/app/messages
-
-      # Signal sesja
-      - ./signal-data:/signal-data
-
-      # WhatsApp sesja + cache
-      - ./whatsapp-session:/app/.wwebjs_auth
-      - ./whatsapp-cache:/app/.wwebjs_cache
-
-      # Uploady
-      - ./uploads:/uploads
+       - ./data/whatsapp/session:/data/whatsapp/session
+       - ./data/whatsapp/cache:/data/whatsapp/cache
+       - ./data/uploads:/data/uploads
+       - ./data/messages:/data/messages
+       - ./data/signal:/data/signal
+       - ./data/tts:/data/tts
     ports:
       - "${BACKEND_PORT}:3000"
     restart: unless-stopped
@@ -34,6 +26,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: chat-reader-frontend
+    env_file: .env
     volumes:
       # dev-mode: bind mount całego katalogu projektu do /app (nadpisze COPY z Dockerfile)
       - ./frontend:/app
