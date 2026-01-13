@@ -2,29 +2,27 @@ import multer, { FileFilterCallback } from 'multer'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { Request } from 'express'
+import { UPLOADS_DIR } from '../config/paths'
 
-// Allowed file extensions and MIME types
 const allowedMimeTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime']
-
-/**
- * Storage configuration for Multer
- * - Files are stored in 'uploads/' folder
- * - Each file gets a unique name (UUID + extension)
- */
 
 const storage = multer.diskStorage({
     destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-        cb(null, 'uploads/')
+        cb(null, UPLOADS_DIR)
     },
     filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-        const ext = path.extname(file.originalname)
+        const extFromName = path.extname(file.originalname)
+        const ext = extFromName || ({
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'video/mp4': '.mp4',
+            'video/webm': '.webm',
+            'video/quicktime': '.mov',
+        } as Record<string, string>)[file.mimetype] || ''
         cb(null, `${uuidv4()}${ext}`)
     },
 })
 
-/**
- * Filter to allow only supported image/video MIME types
- */
 const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback): void => {
     if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true)
@@ -33,15 +31,13 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallb
     }
 }
 
-/**
- * Exported Multer instance
- */
+
 
 const upload = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: 15 * 1024 * 1024, // Optional: 15MB max file size
+        fileSize: 15 * 1024 * 1024,
     },
 })
 
