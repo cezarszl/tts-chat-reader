@@ -7,12 +7,14 @@ import { SessionMessage } from '../types/SessionMessage';
 import { LinkState } from '../types/LinkState';
 import QRCode from 'qrcode';
 import util from 'util';
+import { MESSAGES_DIR, UPLOADS_DIR, SIGNAL_CONFIG_DIR } from "../config/paths";
 
 const execAsync = util.promisify(exec);
-const SIGNAL_CLI_PATH = process.env.SIGNAL_CLI_PATH || 'signal-cli';
-const CONFIG_DIR = process.env.SIGNAL_CONFIG_DIR || '/signal-data';
-const historyPath = path.resolve(__dirname, 'signal-history.json');
-const namesPath = path.resolve(__dirname, 'signal-names.json');
+const SIGNAL_CLI_PATH = process.env.SIGNAL_CLI_PATH ?? 'signal-cli';
+const CONFIG_DIR = SIGNAL_CONFIG_DIR;
+
+const historyPath = path.join(MESSAGES_DIR, "signal-history.json");
+const namesPath = path.join(MESSAGES_DIR, "signal-names.json");
 
 export const MY_NUMBER = process.env.SIGNAL_PHONE_NUMBER!;
 export const sessionMessages: Record<string, SessionMessage[]> = {};
@@ -26,18 +28,34 @@ const state: LinkState = {
 };
 
 export async function isSignalLinked(): Promise<boolean> {
-    if (!MY_NUMBER) return false;
     try {
-        await execAsync(`${SIGNAL_CLI_PATH} --config ${CONFIG_DIR} -a ${MY_NUMBER} listDevices`);
-        console.log('SIGNAL')
-        return true;
-    } catch {
+        const dataDir = path.join(CONFIG_DIR, 'data');
+        const entries = await fs.promises.readdir(dataDir, { withFileTypes: true });
+
+        // 1) katalog typu "943311.d"
+        const hasAccountDir = entries.some(
+            (e) => e.isDirectory() && e.name.endsWith('.d')
+        );
+
+        // 2) accounts.json
+        const accountsJsonPath = path.join(dataDir, 'accounts.json');
+        let hasAccountsJson = false;
+        try {
+            await fs.promises.access(accountsJsonPath, fs.constants.R_OK);
+            hasAccountsJson = true;
+        } catch {
+            hasAccountsJson = false;
+        }
+
+        return hasAccountDir && hasAccountsJson;
+    } catch (e) {
+        console.error('isSignalLinked fs error:', e);
         return false;
     }
 }
 
 export function startSignalLink(deviceName = 'MyChatReader', timeoutMs = 3 * 60 * 1000): void {
-    if (state.child && !state.completed) return; // już trwa
+    if (state.child && !state.completed) return;
 
     cancelSignalLink();
 
@@ -138,9 +156,7 @@ export const signalSend = (from: string, to: string, message: string): Promise<s
                 if (!sessionMessages[to]) sessionMessages[to] = [];
                 sessionMessages[to].push(msg);
                 saveMessages();
-                if (Date.now() - msg.timestamp > 10_000) {
-                    broadcastMessage({ contactId: to, ...msg, source: 'signal' });
-                }
+                broadcastMessage({ contactId: to, ...msg, source: 'signal' });
                 resolve(stdout.toString().trim());
             }
         });
@@ -183,20 +199,18 @@ export const receiveMessages = async (from: string) => {
                 // If the message is older than 10 seconds, skip TTS and just broadcast
 
                 const isOld = Date.now() - message.timestamp > 10_000;
-                if (isOld) {
-                    sessionMessages[contactId].push(message);
-                    broadcastMessage({ contactId, ...message, source: 'signal' });
-                    continue;
-                } else {
+
+                let finalMsg: SessionMessage = message;
+
+                if (!isOld) {
                     const announcement = `Nowa wiadomość od ${displayName}. ${message.body}`;
                     const { audioId } = await speakText(announcement);
-                    const fullMsg: SessionMessage = { ...message, audioId };
-                    sessionMessages[contactId].push(fullMsg);
-
-                    broadcastMessage({ contactId, ...fullMsg, source: 'signal' });
-
+                    finalMsg = { ...message, audioId };
                 }
+
+                sessionMessages[contactId].push(finalMsg);
                 saveMessages();
+                broadcastMessage({ contactId, ...finalMsg, source: 'signal' });
 
             } catch (err) {
                 console.error('⚠️ Error while processing a single message block:', err);
@@ -226,8 +240,7 @@ const parseBlock = (block: string): {
         const extension = path.extname(tempPath).toLowerCase();
 
         const fileName = `media-${Date.now()}${extension}`;
-        const uploadsDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
-        const finalPath = path.resolve(uploadsDir, fileName);
+        const finalPath = path.join(UPLOADS_DIR, fileName);
 
         try {
             fs.copyFileSync(tempPath, finalPath);
@@ -301,7 +314,7 @@ export const checkSignalReady = () => {
 };
 
 export const sendSignalMediaMessage = async ({ from, to, filePath }: { from: string, to: string, filePath: string }) => {
-    const cmd = `signal-cli -u ${from} send ${to} -a "${filePath}"`;
+    const cmd = `${SIGNAL_CLI_PATH} --config ${CONFIG_DIR} -a ${from} send ${to} -a "${filePath}"`;
     await execAsync(cmd)
 
     const isImage = filePath.match(/\.(jpg|jpeg|png)$/i);
