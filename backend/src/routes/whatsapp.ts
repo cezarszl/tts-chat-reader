@@ -61,7 +61,7 @@ router.post('/send', async (req, res) => {
     }
 
     try {
-        await whatsappClient.sendMessage(to, message);
+        await whatsappClient.sendMessage(to, message, { sendSeen: false });
         res.json({ success: true });
     } catch (error) {
         console.error('❌ Error sending message:', error);
