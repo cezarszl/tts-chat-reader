@@ -62,7 +62,11 @@ VOLUME ["/signal-data", "/.wwebjs_auth", "/.wwebjs_cache", "/uploads"]
 COPY --chown=appuser:appuser --from=build /app/package*.json ./
 COPY --chown=appuser:appuser --from=build /app/node_modules ./node_modules
 COPY --chown=appuser:appuser --from=build /app/dist ./dist
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 3000
+
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["node", "dist/index.js"]
