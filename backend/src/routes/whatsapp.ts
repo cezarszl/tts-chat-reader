@@ -40,6 +40,12 @@ router.get('/contacts', async (req, res) => {
         });
     }
 
+    result.sort((a, b) => {
+        const timeA = a.lastTimestamp || 0;
+        const timeB = b.lastTimestamp || 0;
+        return timeB - timeA;
+    })
+
     res.json(result);
 });
 
