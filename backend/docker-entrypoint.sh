@@ -9,4 +9,4 @@ if [ -d "$TARGET_DIR" ]; then
     find "$TARGET_DIR" -name "SingletonSocket" -type s -delete -print    
 fi
 
-exec "$@"
+exec dbus-run-session -- "$@"
