@@ -4,7 +4,7 @@ import routes from './routes';
 import './whatsapp';
 import { setupWebSocket } from './ws';
 import { createServer } from 'http';
-import { receiveMessages, checkSignalReady, isSignalLinked } from './signal/';
+import { startSignalDaemon, checkSignalReady, isSignalLinked } from './signal/';
 
 import { UPLOADS_DIR, ensureDirs } from "./config/paths";
 
@@ -28,31 +28,37 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 const server = createServer(app);
 setupWebSocket(server);
 
-server.listen(port, () => {
+server.listen(port, async () => {
     console.log(`🚀 Backend running at ${baseUrl}:${port}`);
+    if (await isSignalLinked()) {
+        console.log('✅ Signal is linked. Starting daemon...');
+        startSignalDaemon();
+    } else {
+        console.log('ℹ️ Signal not linked. Waiting for user action via Frontend.');
+    }
 });
 
-checkSignalReady();
+// checkSignalReady();
+// startSignalDaemon();
+// let receiveInFlight = false;
+// let lastErrorAt = 0;
 
-let receiveInFlight = false;
-let lastErrorAt = 0;
+// setInterval(async () => {
+//     if (receiveInFlight) return;
 
-setInterval(async () => {
-    if (receiveInFlight) return;
+//     // mały backoff po błędzie (np. 2s)
+//     if (Date.now() - lastErrorAt < 2000) return;
 
-    // mały backoff po błędzie (np. 2s)
-    if (Date.now() - lastErrorAt < 2000) return;
+//     try {
+//         const linked = await isSignalLinked();
+//         if (!linked) return; // nie próbuj receive jeśli nie zalinkowane
 
-    try {
-        const linked = await isSignalLinked();
-        if (!linked) return; // nie próbuj receive jeśli nie zalinkowane
-
-        receiveInFlight = true;
-        await receiveMessages(SIGNAL_NUMBER);
-    } catch (e) {
-        lastErrorAt = Date.now();
-        console.error('❌ Error in periodic Signal receive:', (e as any)?.toString?.() || e);
-    } finally {
-        receiveInFlight = false;
-    }
-}, 5000);
+//         receiveInFlight = true;
+//         await receiveMessages(SIGNAL_NUMBER);
+//     } catch (e) {
+//         lastErrorAt = Date.now();
+//         console.error('❌ Error in periodic Signal receive:', (e as any)?.toString?.() || e);
+//     } finally {
+//         receiveInFlight = false;
+//     }
+// }, 5000);
