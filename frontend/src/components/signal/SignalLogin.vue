@@ -19,19 +19,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 const emit = defineEmits<{ (e: 'authenticated'): void }>()
 
 const loading = ref(false)
 const qr = ref<string | null>(null)
-let timer: number | undefined
+let timer: ReturnType<typeof setInterval> | undefined
+
+function cleanup() {
+  if (timer) clearInterval(timer)
+  timer = undefined
+  loading.value = false
+  qr.value = null
+}
 
 async function start() {
+  cleanup()
+  loading.value = true
+
   try {
-    loading.value = true
-    qr.value = null
     await fetch(`${baseUrl}/api/signal/auth/start`, { method: 'POST' })
     pollQr()
   } catch (e) {
@@ -41,24 +49,23 @@ async function start() {
 }
 
 function pollQr() {
-  // czysty polling co 1s
-  timer = window.setInterval(async () => {
+  timer = setInterval(async () => {
     try {
       const res = await fetch(`${baseUrl}/api/signal/auth/qr`)
-      if (res.status === 200) {
-        const data = await res.json()
-        if (data.qr === false) {
-          // już zalinkowane
-          cleanup()
-          emit('authenticated')
-          return
-        }
-        if (data.qr) {
-          qr.value = data.qr
-          loading.value = false
-        }
+      if (res.status !== 200) return
+
+      const data = await res.json()
+
+      if (data.qr === false) {
+        cleanup()
+        emit('authenticated')
+        return
       }
-      // 404 => QR jeszcze niegotowy – czekamy
+
+      if (data.qr) {
+        qr.value = data.qr
+        loading.value = false
+      }
     } catch (e) {
       console.error('Signal QR poll error', e)
     }
@@ -73,18 +80,7 @@ async function cancel() {
   }
 }
 
-function cleanup() {
-  if (timer) {
-    clearInterval(timer)
-    timer = undefined
-  }
-  loading.value = false
-  qr.value = null
-}
-
-onUnmounted(() => {
-  cleanup()
-})
+onUnmounted(() => cleanup())
 </script>
 
 <style scoped>
